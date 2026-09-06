@@ -1,0 +1,34 @@
+---
+import { Check, ChevronDown } from "@lucide/astro";
+
+interface Props {
+  name: string;
+  price: string;
+  services: string[];
+  open?: boolean;
+}
+
+const { name, price, services, open = false } = Astro.props;
+---
+
+<details class="package-card" data-package-card={name} open={open}>
+  <summary>
+    <span class="package-card__title">
+      <small class="package-card__selection" aria-hidden="true"></small>
+      <strong>{name}</strong>
+      <em>{services.length} kontrol grubu</em>
+    </span>
+    <span class="package-card__price">
+      <strong>{price}</strong>
+    </span>
+    <i class="package-card__chevron"><ChevronDown size={22} stroke-width={1.9} /></i>
+  </summary>
+  <div class="package-card__content">
+    <p>Pakete dahil kontroller</p>
+    <ul>
+      {services.map((service) => (
+        <li><Check size={17} stroke-width={2.2} aria-hidden="true" /> <span>{service}</span></li>
+      ))}
+    </ul>
+  </div>
+</details>

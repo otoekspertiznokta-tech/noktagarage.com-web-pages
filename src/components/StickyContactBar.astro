@@ -1,0 +1,50 @@
+---
+import { MessageCircle, Phone } from "@lucide/astro";
+import { siteSettings } from "../data/cms";
+---
+
+<aside class="sticky-contact" aria-label="Hızlı iletişim" aria-hidden="true" data-sticky-contact>
+  <a href={siteSettings.phoneHref} data-track-event="click_phone" data-track-context="sticky_bar">
+    <Phone size={19} stroke-width={2.1} />
+    Ara
+  </a>
+  <a href={siteSettings.whatsappBaseUrl} rel="noreferrer" data-track-event="click_whatsapp" data-track-context="sticky_bar">
+    <MessageCircle size={19} stroke-width={2.1} />
+    WhatsApp
+  </a>
+</aside>
+
+<script>
+  const stickyContact = document.querySelector<HTMLElement>("[data-sticky-contact]");
+
+  if (stickyContact) {
+    const links = stickyContact.querySelectorAll<HTMLAnchorElement>("a");
+    const heroActions = document.querySelector<HTMLElement>('main [class*="hero__actions"]');
+
+    const setStickyContactVisibility = (isVisible: boolean) => {
+      stickyContact.classList.toggle("is-visible", isVisible);
+      stickyContact.setAttribute("aria-hidden", String(!isVisible));
+      document.body.classList.toggle("has-visible-sticky-contact", isVisible);
+
+      links.forEach((link) => {
+        if (isVisible) link.removeAttribute("tabindex");
+        else link.setAttribute("tabindex", "-1");
+      });
+    };
+
+    setStickyContactVisibility(false);
+
+    if (heroActions && "IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(([entry]) => {
+        const hasPassedHeroActions = !entry.isIntersecting && entry.boundingClientRect.bottom < 0;
+        setStickyContactVisibility(hasPassedHeroActions);
+      });
+
+      observer.observe(heroActions);
+    } else {
+      const updateFromScroll = () => setStickyContactVisibility(window.scrollY > 240);
+      window.addEventListener("scroll", updateFromScroll, { passive: true });
+      updateFromScroll();
+    }
+  }
+</script>

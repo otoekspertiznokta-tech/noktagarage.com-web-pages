@@ -1,0 +1,152 @@
+---
+import {
+  CircleQuestionMark,
+  FileCheckCorner,
+  MapPin,
+  MessageCircle,
+  PackageCheck,
+  Phone,
+  PhoneCall,
+  ScanSearch,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import ResponsiveImage from "../components/ResponsiveImage.astro";
+import { siteSettings } from "../data/cms";
+
+const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent("Merhaba, uzaktan ekspertiz hizmetiniz hakkında bilgi almak istiyorum.")}`;
+
+const steps = [
+  {
+    number: "01",
+    title: "Paketini seç",
+    description: "Mevcut ekspertiz paketlerinden ihtiyacına uygun olanı belirle.",
+    icon: PackageCheck,
+  },
+  {
+    number: "02",
+    title: "Araç şubeye gelsin",
+    description: "Araç veya satıcı, randevu saatinde ilgili şubemize gelir.",
+    icon: MapPin,
+  },
+  {
+    number: "03",
+    title: "Ekspertiz yapılsın",
+    description: "Seçtiğin paketin kontrolleri uzman ekibimiz tarafından uygulanır.",
+    icon: ScanSearch,
+  },
+  {
+    number: "04",
+    title: "Rapor sana iletilsin",
+    description: "Kontrol sonuçlarını içeren ekspertiz raporu doğrudan sana gönderilir.",
+    icon: FileCheckCorner,
+  },
+  {
+    number: "05",
+    title: "Uzmanla konuş",
+    description: "Uzmanımız bulguları telefonla açıklar; merak ettiklerini doğrudan sorarsın.",
+    icon: PhoneCall,
+  },
+];
+---
+
+<SiteLayout
+  title="Uzaktan Ekspertiz | Nokta Garage"
+  description="Araç ilgili şubemizde, siz başka şehirdeyken seçtiğiniz ekspertiz paketinin uygulanması; rapor iletimi ve uzmanla birebir telefon görüşmesi."
+>
+  <section class="remote-hero" aria-labelledby="remote-hero-title">
+    <ResponsiveImage
+      class="remote-hero__image"
+      src="/images/home-hero.webp"
+      width={1600}
+      height={779}
+      alt="Nokta Garage ekspertiz alanında kontrol edilen otomobil"
+      fetchpriority="high"
+    />
+    <div class="remote-hero__veil" aria-hidden="true"></div>
+    <div class="remote-hero__content">
+      <p class="eyebrow">Uzaktan Ekspertiz</p>
+      <h1 id="remote-hero-title">Araç burada incelensin, sen uzaktan karar ver.</h1>
+      <p>
+        Başka şehirde olsan da seçtiğin ekspertiz paketi bizim şubemizde uygulansın;
+        rapor ve uzman değerlendirmesi doğrudan sana iletilsin.
+      </p>
+      <div class="remote-hero__actions">
+        <ButtonLink href="/ekspertiz-paketleri">Paketleri İncele</ButtonLink>
+        <ButtonLink href={whatsappUrl} variant="outline"><MessageCircle size={18} /> WhatsApp</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="remote-distance" aria-label="Uzaktan ekspertiz hizmet özeti">
+    <div>
+      <span>Araç</span>
+      <strong>Bizim şubemizde</strong>
+    </div>
+    <div class="remote-distance__line" aria-hidden="true"><span></span></div>
+    <div>
+      <span>Alıcı</span>
+      <strong>Dilediği şehirde</strong>
+    </div>
+  </section>
+
+  <section class="remote-process" aria-labelledby="remote-process-title">
+    <div class="remote-process__heading">
+      <p>Nasıl Çalışır?</p>
+      <h2 id="remote-process-title">Beş adımda net bilgi.</h2>
+      <span>Sen uzaktayken araç şubemizde incelenir; süreç raporla bitmez, uzman görüşmesiyle tamamlanır.</span>
+    </div>
+    <ol class="remote-process__steps">
+      {steps.map(({ number, title, description, icon: Icon }) => (
+        <li>
+          <div class="remote-process__top">
+            <span>{number}</span>
+            <Icon size={29} stroke-width={1.8} aria-hidden="true" />
+          </div>
+          <div>
+            <strong>{title}</strong>
+            <p>{description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="remote-expert" aria-labelledby="remote-expert-title">
+    <div class="remote-expert__statement">
+      <PhoneCall size={42} stroke-width={1.65} aria-hidden="true" />
+      <p>Sadece PDF rapor değil.</p>
+      <h2 id="remote-expert-title">Bulguları uzmandan birebir dinle.</h2>
+    </div>
+    <div class="remote-expert__details">
+      <p>
+        Ekspertiz tamamlandığında uzmanımız seni telefonla arar; rapordaki bulguları anlaşılır şekilde açıklar.
+        Böylece sonuçları yalnızca okumakla kalmaz, değerlendirme sırasında aklına takılanları da sorabilirsin.
+      </p>
+      <div>
+        <CircleQuestionMark size={25} aria-hidden="true" />
+        <span><strong>Doğrudan soru sor</strong> — Araçla ilgili merak ettiğin noktaları uzmanla görüş.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="remote-package" aria-labelledby="remote-package-title">
+    <div>
+      <p>Kontrol Kapsamı</p>
+      <h2 id="remote-package-title">İhtiyacına uygun paketi seç.</h2>
+      <span>Uzaktan ekspertizde, mevcut ekspertiz paketlerimizden biri uygulanır.</span>
+    </div>
+    <ButtonLink href="/ekspertiz-paketleri" variant="dark">Paketleri Karşılaştır</ButtonLink>
+  </section>
+
+  <section class="remote-cta" aria-labelledby="remote-cta-title">
+    <div>
+      <p>Bilgi ve Randevu</p>
+      <h2 id="remote-cta-title">Araç bilgilerini paylaş, süreci planlayalım.</h2>
+    </div>
+    <div class="remote-cta__actions">
+      <ButtonLink href={siteSettings.phoneHref}><Phone size={18} /> Hemen Ara</ButtonLink>
+      <ButtonLink href={whatsappUrl} variant="outline"><MessageCircle size={18} /> WhatsApp’tan Yaz</ButtonLink>
+    </div>
+  </section>
+</SiteLayout>

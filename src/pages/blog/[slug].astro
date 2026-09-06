@@ -1,0 +1,111 @@
+---
+import { ArrowLeft, ArrowUpRight, CalendarDays, MessageCircle } from "@lucide/astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import ButtonLink from "../../components/ButtonLink.astro";
+import ResponsiveImage from "../../components/ResponsiveImage.astro";
+import type { BlogPost } from "../../data/blog-posts";
+import { siteContent, siteSettings } from "../../data/cms";
+
+const blogPosts = siteContent.blogPosts;
+
+export function getStaticPaths() {
+  return siteContent.blogPosts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+interface Props {
+  post: BlogPost;
+}
+
+const { post } = Astro.props;
+const relatedPosts = blogPosts.filter((candidate) => candidate.slug !== post.slug).slice(0, 2);
+const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent(siteSettings.defaultWhatsappMessage)}`;
+---
+
+<SiteLayout
+  title={post.seoTitle}
+  description={post.seoDescription}
+  canonicalPath={`/blog/${post.slug}`}
+  ogImage={post.coverImage}
+  article={{ headline: post.title, publishedTime: post.publishedAt, section: post.category }}
+>
+  <article class="blog-article">
+    <header class="blog-article__header">
+      <nav aria-label="İçerik yolu">
+        <a href="/blog"><ArrowLeft size={16} aria-hidden="true" /> Blog</a>
+        <span>/</span>
+        <span>{post.category}</span>
+      </nav>
+      <div class="blog-article__meta">
+        <span>{post.category}</span>
+        <time datetime={post.publishedAt}><CalendarDays size={16} aria-hidden="true" /> {post.displayDate}</time>
+      </div>
+      <h1>{post.title}</h1>
+      <p>{post.summary}</p>
+    </header>
+
+    <figure class="blog-article__cover">
+      <ResponsiveImage src={post.coverImage} width={1600} height={779} alt={post.coverAlt} fetchpriority="high" sizes="(max-width: 760px) 100vw, 1200px" />
+    </figure>
+
+    <div class="blog-article__layout">
+      <aside class="blog-article__aside">
+        <span>Bu Yazıda</span>
+        {post.sections.length > 0 ? (
+          <ol>
+            {post.sections.map((section, index) => (
+              <li><a href={`#bolum-${index + 1}`}>{String(index + 1).padStart(2, "0")} {section.heading}</a></li>
+            ))}
+          </ol>
+        ) : <p>Yazının tamamını okuyun.</p>}
+      </aside>
+
+      <div class="blog-article__content">
+        <p class="blog-article__lead">{post.intro}</p>
+        {post.contentHtml ? <div class="blog-article__wp-content" set:html={post.contentHtml} /> : post.sections.map((section, index) => (
+          <section id={`bolum-${index + 1}`}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <h2>{section.heading}</h2>
+            {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+            {section.bullets && (
+              <ul>
+                {section.bullets.map((item) => <li>{item}</li>)}
+              </ul>
+            )}
+          </section>
+        ))}
+
+        <aside class="blog-article__notice">
+          <strong>Bilgilendirme</strong>
+          <p>Bu içerik genel bilgilendirme amaçlıdır. Araçla ilgili değerlendirme, fiziksel kontroller ve araca özel bulgular üzerinden yapılmalıdır.</p>
+        </aside>
+      </div>
+    </div>
+  </article>
+
+  <section class="blog-conversion" aria-labelledby="blog-conversion-title">
+    <div>
+      <p>Aracını Kontrol Ettir</p>
+      <h2 id="blog-conversion-title">Ekspertiz kapsamını birlikte netleştirelim.</h2>
+    </div>
+    <div class="blog-conversion__actions">
+      <ButtonLink href="/ekspertiz-paketleri">Paketleri İncele</ButtonLink>
+      <ButtonLink href={whatsappUrl} variant="outline"><MessageCircle size={18} /> WhatsApp</ButtonLink>
+    </div>
+  </section>
+
+  <section class="blog-related" aria-labelledby="related-posts-title">
+    <div class="blog-related__heading">
+      <p>İlgili İçerikler</p>
+      <h2 id="related-posts-title">Okumaya devam et</h2>
+    </div>
+    <div class="blog-related__grid">
+      {relatedPosts.map((related) => (
+        <a href={`/blog/${related.slug}`}>
+          <span>{related.category}</span>
+          <strong>{related.title}</strong>
+          <ArrowUpRight size={21} aria-hidden="true" />
+        </a>
+      ))}
+    </div>
+  </section>
+</SiteLayout>

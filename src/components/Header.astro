@@ -1,0 +1,130 @@
+---
+import { ChevronDown, Menu, X } from "@lucide/astro";
+import { siteSettings } from "../data/cms";
+
+const { services, corporate, mobile: mobileLinks } = siteSettings.navigation;
+---
+
+<a class="skip-link" href="#ana-icerik">Ana içeriğe geç</a>
+
+<header class="site-header" data-site-header>
+  <div class="site-header__inner">
+    <a class="brand-lockup" href="/" aria-label="Nokta Garage ana sayfa">
+      <img src={siteSettings.logo} alt="" width="1254" height="1254" />
+      <span>
+        <strong>{siteSettings.brandName.toUpperCase()}</strong>
+        <small>{siteSettings.brandDescriptor.toUpperCase()}</small>
+      </span>
+    </a>
+
+    <nav class="desktop-nav" aria-label="Ana menü">
+      <a href="/ekspertiz-paketleri">Paketler</a>
+      <details class="nav-dropdown">
+        <summary>Hizmetler <ChevronDown size={16} stroke-width={1.9} /></summary>
+        <div class="nav-dropdown__panel">
+          {services.map(({ label, href }) => <a href={href}>{label}</a>)}
+        </div>
+      </details>
+      <details class="nav-dropdown">
+        <summary>Kurumsal <ChevronDown size={16} stroke-width={1.9} /></summary>
+        <div class="nav-dropdown__panel">
+          {corporate.map(({ label, href }) => <a href={href}>{label}</a>)}
+        </div>
+      </details>
+      <a href="/iletisim">İletişim</a>
+    </nav>
+
+    <button
+      class="menu-trigger"
+      type="button"
+      aria-label="Menüyü aç"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+      data-menu-open
+    >
+      <Menu class="menu-trigger__open" size={29} stroke-width={2.1} />
+      <X class="menu-trigger__close" size={29} stroke-width={2.1} />
+    </button>
+  </div>
+
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true" data-mobile-menu>
+    <nav aria-label="Mobil menü">
+      {mobileLinks.map(({ label, href }, index) => (
+        <a href={href} style={`--menu-index:${index}`}>
+          <span>{String(index + 1).padStart(2, "0")}</span>
+          {label}
+        </a>
+      ))}
+    </nav>
+    <div class="mobile-menu__contact">
+      <a href={siteSettings.phoneHref}>{siteSettings.primaryPhone}</a>
+      <small>{siteSettings.workingHours}</small>
+    </div>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>("[data-site-header]");
+  const openButton = document.querySelector<HTMLButtonElement>("[data-menu-open]");
+  const menu = document.querySelector<HTMLElement>("[data-mobile-menu]");
+
+  const applyMenuState = (open: boolean) => {
+    if (!header || !openButton || !menu) return;
+    header.dataset.menuOpen = String(open);
+    openButton.setAttribute("aria-expanded", String(open));
+    openButton.setAttribute("aria-label", open ? "Menüyü kapat" : "Menüyü aç");
+    menu.setAttribute("aria-hidden", String(!open));
+    document.documentElement.classList.toggle("menu-is-open", open);
+
+    if (open) {
+      menu.querySelector<HTMLAnchorElement>("a")?.focus({ preventScroll: true });
+    } else {
+      openButton.focus({ preventScroll: true });
+    }
+  };
+
+  const setMenuState = (open: boolean, syncHistory = true) => {
+    const menuState = history.state as Record<string, unknown> | null;
+
+    if (open && syncHistory && !menuState?.noktaMenuOpen) {
+      history.pushState({ ...menuState, noktaMenuOpen: true }, "");
+    }
+
+    if (!open && syncHistory && menuState?.noktaMenuOpen) {
+      history.back();
+      return;
+    }
+
+    applyMenuState(open);
+  };
+
+  openButton?.addEventListener("click", () => {
+    const isOpen = openButton.getAttribute("aria-expanded") === "true";
+    setMenuState(!isOpen);
+  });
+
+  menu?.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      const menuState = history.state as Record<string, unknown> | null;
+      if (menuState?.noktaMenuOpen) {
+        history.replaceState({ ...menuState, noktaMenuOpen: false }, "");
+      }
+      applyMenuState(false);
+    });
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && openButton?.getAttribute("aria-expanded") === "true") {
+      setMenuState(false);
+    }
+  });
+
+  window.matchMedia("(min-width: 901px)").addEventListener("change", (event) => {
+    if (event.matches) setMenuState(false);
+  });
+
+  window.addEventListener("popstate", () => {
+    const menuState = history.state as Record<string, unknown> | null;
+    applyMenuState(Boolean(menuState?.noktaMenuOpen));
+  });
+</script>

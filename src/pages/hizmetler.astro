@@ -1,0 +1,55 @@
+---
+import {
+  Armchair, Box, CarFront, CircleDot, CircleStop, Gauge, Lightbulb, MoveHorizontal,
+  Paintbrush, ScanLine, Search, ShieldCheck, WavesHorizontal, Wrench,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import ServiceAccordion from "../components/ServiceAccordion.astro";
+import { siteContent, type ServiceIconKey } from "../data/cms";
+
+const iconMap = {
+  wrench: Wrench, search: Search, car: CarFront, paint: Paintbrush, scan: ScanLine,
+  box: Box, gauge: Gauge, brake: CircleStop, suspension: WavesHorizontal,
+  alignment: MoveHorizontal, interior: Armchair, light: Lightbulb, tire: CircleDot,
+  airbag: ShieldCheck,
+} satisfies Record<ServiceIconKey, typeof Wrench>;
+
+const services = siteContent.services.filter((service) => service.active).sort((a, b) => a.order - b.order);
+---
+
+<SiteLayout
+  title="Oto Ekspertiz Hizmetleri | Nokta Garage"
+  description="Nokta Garage motor, mekanik, kaporta, performans, fren, süspansiyon ve güvenlik kontrollerini inceleyin."
+>
+  <section class="services-hero" aria-labelledby="services-title">
+    <div class="services-hero__inner">
+      <p class="eyebrow">Oto Ekspertiz Hizmetleri</p>
+      <h1 id="services-title">Aracın her bölümünü ayrı ayrı incele.</h1>
+      <p>Kontrol başlıklarını açarak hangi alanın nasıl değerlendirildiğini görebilirsin.</p>
+      <div class="services-hero__actions">
+        <ButtonLink href="#hizmet-listesi">Hizmetleri İncele</ButtonLink>
+        <ButtonLink href="/ekspertiz-paketleri" variant="outline">Paketleri Gör</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="services-section" id="hizmet-listesi" aria-labelledby="services-list-title">
+    <div class="services-section__heading">
+      <p>{services.length} Kontrol Başlığı</p>
+      <h2 id="services-list-title">Hizmet detayları</h2>
+      <span>Kontrol kapsamları seçilen ekspertiz paketine göre değişebilir.</span>
+    </div>
+
+    <div class="service-list">
+      {services.map((service, index) => {
+        const Icon = iconMap[service.icon];
+        return (
+          <ServiceAccordion title={service.name} category={service.category} description={service.description} open={index === 0}>
+            <Icon slot="icon" size={27} stroke-width={1.8} aria-hidden="true" />
+          </ServiceAccordion>
+        );
+      })}
+    </div>
+  </section>
+</SiteLayout>

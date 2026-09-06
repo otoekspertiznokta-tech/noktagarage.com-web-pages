@@ -1,0 +1,117 @@
+---
+import {
+  BadgePercent,
+  CalendarClock,
+  Clock3,
+  FileSearch,
+  Images,
+  MapPinned,
+  MessageCircle,
+  Navigation,
+  Newspaper,
+  PackageSearch,
+  Phone,
+  Radio,
+  Store,
+  Wrench,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import QuickAccessCard from "../components/QuickAccessCard.astro";
+import ResponsiveImage from "../components/ResponsiveImage.astro";
+import { primaryBranch, siteContent, siteSettings } from "../data/cms";
+import { localBusinessStructuredData } from "../data/structured-data";
+
+const homePage = siteContent.pages.home;
+const iconMap = {
+  package: PackageSearch, service: Wrench, mobile: MapPinned, remote: Radio,
+  report: FileSearch, appointment: CalendarClock, campaign: BadgePercent,
+  gallery: Images, franchise: Store, contact: Navigation,
+} as const;
+const quickAccess = (homePage.quickAccess ?? []).filter((item) => item.visible).sort((a, b) => a.order - b.order);
+const homeSections = homePage.sections as Record<string, string>;
+---
+
+<SiteLayout
+  title={homePage.seo.title}
+  description={homePage.seo.description}
+  structuredData={localBusinessStructuredData}
+  showBrandIntro
+  hideStickyContact
+>
+  <section class="home-hero" aria-labelledby="home-hero-title">
+    <ResponsiveImage
+      class="home-hero__image"
+      src={homePage.hero.image ?? "/images/home-hero.webp"}
+      width={1600}
+      height={779}
+      alt="Profesyonel oto ekspertiz alanında kontrol edilen otomobil"
+      sizes="(max-width: 760px) 100vh, 100vw"
+      fetchpriority="high"
+    />
+    <div class="home-hero__veil" aria-hidden="true"></div>
+    <div class="home-hero__content">
+      <p class="eyebrow">{homePage.hero.eyebrow}</p>
+      <h1 id="home-hero-title">{homePage.hero.heading}</h1>
+      <p>{homePage.hero.description}</p>
+      <div class="home-hero__actions">
+        <ButtonLink href={homePage.hero.primaryCta?.href ?? siteSettings.phoneHref} eventName="click_phone" eventContext="home_hero"><Phone size={18} /> {homePage.hero.primaryCta?.label ?? "Hemen Ara"}</ButtonLink>
+        <ButtonLink href={homePage.hero.secondaryCta?.href ?? siteSettings.whatsappBaseUrl} variant="outline" eventName="click_whatsapp" eventContext="home_hero"><MessageCircle size={18} /> {homePage.hero.secondaryCta?.label ?? "WhatsApp"}</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="location-strip" aria-labelledby="location-title">
+    <div class="location-strip__content">
+      <div class="location-strip__copy">
+        <span class="location-strip__icon"><MapPinned size={28} aria-hidden="true" /></span>
+        <div>
+          <p class="location-strip__label">Nokta Garage · Lüleburgaz</p>
+          <h2 id="location-title">{homeSections.locationTitle}</h2>
+          <address>{primaryBranch.shortAddress}</address>
+          <span class="location-strip__hours"><Clock3 size={16} aria-hidden="true" /> {primaryBranch.workingHours}</span>
+        </div>
+      </div>
+
+      <a class="location-strip__map" href={primaryBranch.mapsUrl} rel="noreferrer" aria-label="Google Maps ile Nokta Garage yol tarifini aç" data-track-event="click_directions" data-track-context="home_location">
+        <span class="location-strip__route" aria-hidden="true"></span>
+        <span class="location-strip__pin" aria-hidden="true"><MapPinned size={34} /></span>
+        <strong>Tıkla Yol Tarifi Al</strong>
+        <Navigation size={20} aria-hidden="true" />
+      </a>
+    </div>
+  </section>
+
+  <section class="home-quick" id="hizli-erisim" aria-labelledby="quick-title">
+    <div class="home-section-heading">
+      <p>Hızlı Erişim</p>
+      <h2 id="quick-title">{homeSections.quickAccessTitle}</h2>
+    </div>
+
+    <div class="quick-grid" aria-label="Nokta Garage hızlı erişim bağlantıları">
+      {quickAccess.map((item) => {
+        const Icon = iconMap[item.icon];
+        return <QuickAccessCard label={item.label} href={item.href} tone={item.tone}><Icon slot="icon" size={40} aria-hidden="true" /></QuickAccessCard>;
+      })}
+    </div>
+  </section>
+
+  <section class="home-discover" aria-labelledby="discover-title">
+    <div class="home-discover__heading">
+      <p>Keşfet</p>
+      <h2 id="discover-title">{homeSections.discoverTitle}</h2>
+    </div>
+    <div class="home-discover__links">
+      <a href="/galeri">
+        <Images size={30} aria-hidden="true" />
+        <span><small>Nokta Garage</small><strong>Fotoğraf Galerisi</strong></span>
+        <Navigation size={19} aria-hidden="true" />
+      </a>
+      <a href="/blog">
+        <Newspaper size={30} aria-hidden="true" />
+        <span><small>Bilgi Merkezi</small><strong>Blog İçeriklerimiz</strong></span>
+        <Navigation size={19} aria-hidden="true" />
+      </a>
+    </div>
+  </section>
+</SiteLayout>

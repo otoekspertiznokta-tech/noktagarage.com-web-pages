@@ -1,0 +1,78 @@
+---
+import { CalendarClock, CalendarX2, MessageCircle } from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import { siteContent, siteSettings } from "../data/cms";
+
+const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent("Merhaba, güncel kampanyalarınız hakkında bilgi almak istiyorum.")}`;
+const campaignRecords = [...siteContent.campaigns].sort((a, b) => a.order - b.order);
+---
+
+<SiteLayout
+  title="Kampanyalar | Nokta Garage"
+  description="Nokta Garage oto ekspertiz hizmetlerinde güncel kampanyaları ve fırsatları inceleyin."
+>
+  <section class="campaign-page" aria-labelledby="campaign-title">
+    <div class="campaign-page__intro">
+      <p class="eyebrow">Nokta Garage Kampanyalar</p>
+      <h1 id="campaign-title">Güncel fırsatları buradan takip et.</h1>
+    </div>
+
+    <div class="campaign-list" data-campaign-list>
+      {campaignRecords.map((campaign) => (
+        <article
+          class="campaign-card"
+          data-campaign-card
+          data-active={String(campaign.active)}
+          data-start={campaign.startsAt}
+          data-end={campaign.endsAt}
+          hidden
+        >
+          <div class="campaign-card__date">
+            <CalendarClock size={24} aria-hidden="true" />
+            <span>{campaign.startsAt} — {campaign.endsAt}</span>
+          </div>
+          <h2>{campaign.title}</h2>
+          <p>{campaign.summary}</p>
+          <span>{campaign.detail}</span>
+          <ButtonLink href={campaign.cta.href} variant="dark">{campaign.cta.label}</ButtonLink>
+        </article>
+      ))}
+
+      <div class="campaign-empty" data-campaign-empty>
+        <span class="campaign-empty__icon"><CalendarX2 size={42} stroke-width={1.55} aria-hidden="true" /></span>
+        <div>
+          <p>Aktif Kampanya</p>
+          <h2>Şu anda yayınlanmış bir kampanya bulunmuyor.</h2>
+        </div>
+        <ButtonLink href={whatsappUrl} variant="dark"><MessageCircle size={18} /> Güncel Bilgi Al</ButtonLink>
+      </div>
+    </div>
+  </section>
+</SiteLayout>
+
+<script>
+  import { isCampaignVisible } from "../lib/campaign-visibility";
+
+  const campaignCards = document.querySelectorAll<HTMLElement>("[data-campaign-card]");
+  const emptyState = document.querySelector<HTMLElement>("[data-campaign-empty]");
+
+  const now = Date.now();
+  let visibleCount = 0;
+
+  campaignCards.forEach((card) => {
+    const visible = isCampaignVisible(
+      {
+        active: card.dataset.active === "true",
+        startsAt: card.dataset.start ?? "",
+        endsAt: card.dataset.end ?? "",
+      },
+      now,
+    );
+
+    card.hidden = !visible;
+    if (visible) visibleCount += 1;
+  });
+
+  if (emptyState) emptyState.hidden = visibleCount > 0;
+</script>

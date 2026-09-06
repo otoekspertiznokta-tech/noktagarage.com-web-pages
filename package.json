@@ -1,0 +1,33 @@
+{
+  "name": "nokta-garage-public-site",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "cms:sync": "node scripts/sync-wordpress-content.mjs",
+    "cms:sync:production": "CMS_REQUIRED=true node scripts/sync-wordpress-content.mjs",
+    "build": "npm run cms:sync:production && astro check && astro build",
+    "build:local": "astro check && astro build",
+    "audit:site": "node scripts/audit-static-build.mjs",
+    "audit:seo": "node scripts/audit-seo.mjs",
+    "audit:qa": "node scripts/audit-browser-readiness.mjs",
+    "test:cms": "node scripts/test-cms-sync.mjs",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "astro": "^7.2.10",
+    "@lucide/astro": "^1.39.0",
+    "sharp": "^0.35.4",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0"
+  }
+}

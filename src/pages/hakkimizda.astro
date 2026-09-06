@@ -1,0 +1,117 @@
+---
+import {
+  ArrowDownRight,
+  CarFront,
+  FileCheckCorner,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Radio,
+  ScanSearch,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import ResponsiveImage from "../components/ResponsiveImage.astro";
+import { siteSettings } from "../data/cms";
+
+const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent(siteSettings.defaultWhatsappMessage)}`;
+
+const serviceModels = [
+  {
+    number: "01",
+    title: "Şubede ekspertiz",
+    description: "Araç, ilgili şubemizde seçilen paket kapsamına göre kontrol edilir.",
+    icon: MapPin,
+  },
+  {
+    number: "02",
+    title: "Mobil ekspertiz",
+    description: "Uygun hizmet koşullarında ekip ve ekipman aracın bulunduğu noktaya yönlendirilir.",
+    icon: CarFront,
+  },
+  {
+    number: "03",
+    title: "Uzaktan ekspertiz",
+    description: "Şehir dışında olan alıcıya rapor iletilir, bulgular uzman tarafından telefonla açıklanır.",
+    icon: Radio,
+  },
+];
+---
+
+<SiteLayout
+  title="Hakkımızda | Nokta Garage"
+  description="Nokta Garage'ın oto ekspertiz sektöründeki tecrübesi, hizmet seçenekleri ve raporlama yaklaşımı hakkında bilgi alın."
+  ogImage="/images/home-hero.webp"
+>
+  <section class="corporate-hero corporate-hero--about" aria-labelledby="about-title">
+    <ResponsiveImage
+      src="/images/home-hero.webp"
+      width={1600}
+      height={779}
+      alt="Nokta Garage ekspertiz alanında kontrol edilen otomobil"
+      fetchpriority="high"
+    />
+    <div class="corporate-hero__veil" aria-hidden="true"></div>
+    <div class="corporate-hero__content">
+      <p class="eyebrow">Hakkımızda</p>
+      <h1 id="about-title">Tecrübe, ölçüm ve açık anlatım.</h1>
+      <p>Farklı yaş, tip ve durumdaki araçlardan edinilen saha tecrübesini; sistemli kontrol ve anlaşılır raporlamayla bir araya getiriyoruz.</p>
+      <div class="corporate-hero__actions">
+        <ButtonLink href="/ekspertiz-paketleri">Paketleri İncele</ButtonLink>
+        <ButtonLink href={whatsappUrl} variant="outline"><MessageCircle size={18} /> WhatsApp</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="about-experience" aria-labelledby="about-experience-title">
+    <div class="about-experience__mark" aria-hidden="true">
+      <strong>2018</strong>
+      <span>YILINDAN BERİ</span>
+      <ArrowDownRight size={38} stroke-width={1.6} />
+    </div>
+    <div class="about-experience__copy">
+      <p>Deneyimin Başlangıç Noktası</p>
+      <h2 id="about-experience-title" class="about-experience__title">2018’den bu yana oto ekspertiz sektöründe edinilen tecrübe.</h2>
+      <p>Nokta Garage, oto ekspertiz sektöründeki saha deneyimini dijital süreçlerle bir araya getiren, gelişime ve şubeleşmeye açık bir hizmet yapısıdır. Kontrol, raporlama ve müşteri iletişimi süreçlerini daha düzenli ve anlaşılır hâle getirmeyi hedefler. Sektör bilgisiyle sahadaki gerçek ihtiyaçları birlikte değerlendirerek güvenilir ve sürdürülebilir bir ekspertiz deneyimi sunar.</p>
+    </div>
+  </section>
+
+  <section class="about-service-models" aria-labelledby="service-models-title">
+    <div class="corporate-section-heading">
+      <p>Tek Nokta, Farklı İhtiyaçlar</p>
+      <h2 id="service-models-title">Araca ve koşula uygun ekspertiz yolu.</h2>
+    </div>
+    <div class="about-service-models__grid">
+      {serviceModels.map(({ number, title, description, icon: Icon }) => (
+        <article>
+          <div><span>{number}</span><Icon size={31} stroke-width={1.7} aria-hidden="true" /></div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="about-reporting" aria-labelledby="about-reporting-title">
+    <div class="about-reporting__icon"><ScanSearch size={47} stroke-width={1.5} aria-hidden="true" /></div>
+    <div>
+      <p>Raporlama Yaklaşımı</p>
+      <h2 id="about-reporting-title">Bulguyu kaydet, sonucu anlaşılır şekilde açıkla.</h2>
+    </div>
+    <div class="about-reporting__details">
+      <p>Kontrol sonuçlarını yalnızca teknik terimlerle sıralamak yerine, araç hakkında karar verecek kişinin anlayabileceği bir bütün halinde sunmayı önemsiyoruz.</p>
+      <span><FileCheckCorner size={22} aria-hidden="true" /> Paket kapsamına göre sistemli kontrol ve kayıt</span>
+    </div>
+  </section>
+
+  <section class="corporate-contact-strip" aria-labelledby="about-contact-title">
+    <div>
+      <p>Ekspertiz Hakkında Bilgi Al</p>
+      <h2 id="about-contact-title">Aracın için doğru kapsamı birlikte belirleyelim.</h2>
+    </div>
+    <div class="corporate-contact-strip__actions">
+      <ButtonLink href={siteSettings.phoneHref}><Phone size={18} /> Hemen Ara</ButtonLink>
+      <ButtonLink href={whatsappUrl} variant="outline"><MessageCircle size={18} /> WhatsApp’tan Yaz</ButtonLink>
+    </div>
+  </section>
+</SiteLayout>

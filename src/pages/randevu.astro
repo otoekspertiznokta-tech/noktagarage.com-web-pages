@@ -1,0 +1,116 @@
+---
+import {
+  CalendarCheck,
+  CalendarClock,
+  CarFront,
+  Clock3,
+  MapPinned,
+  MessageCircle,
+  Navigation,
+  PackageSearch,
+  Phone,
+  PhoneCall,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import { primaryBranch, siteSettings } from "../data/cms";
+
+const whatsappUrl = `${primaryBranch.whatsapp}?text=${encodeURIComponent("Merhaba, Nokta Garage için ekspertiz randevusu almak istiyorum.")}`;
+const mapsUrl = primaryBranch.mapsUrl;
+---
+
+<SiteLayout
+  title="Ekspertiz Randevusu | Nokta Garage"
+  description="Nokta Garage Lüleburgaz şubesi için telefon veya WhatsApp üzerinden hızlıca oto ekspertiz randevusu alın."
+>
+  <section class="appointment-hero" aria-labelledby="appointment-title">
+    <div class="appointment-hero__intro">
+      <p class="eyebrow">Ekspertiz Randevusu</p>
+      <h1 id="appointment-title">Randevunu birkaç dakikada planla.</h1>
+      <p>Aracın ve istediğin ekspertiz hizmeti hakkında kısa bilgi ver; uygun randevu saatini birlikte netleştirelim.</p>
+      <div class="appointment-hero__status">
+        <span><Clock3 size={18} aria-hidden="true" /> {primaryBranch.workingHours}</span>
+        <span><MapPinned size={18} aria-hidden="true" /> {primaryBranch.district}</span>
+      </div>
+    </div>
+
+    <div class="appointment-choice" aria-label="Randevu iletişim seçenekleri">
+      <div class="appointment-choice__heading">
+        <CalendarClock size={31} stroke-width={1.8} aria-hidden="true" />
+        <div>
+          <p>Nasıl ulaşmak istersin?</p>
+          <h2>Randevu kanalını seç</h2>
+        </div>
+      </div>
+
+      <a class="appointment-channel appointment-channel--phone" href={primaryBranch.phoneHref} data-track-event="appointment_intent" data-track-context="phone">
+        <span class="appointment-channel__icon"><PhoneCall size={31} aria-hidden="true" /></span>
+        <span class="appointment-channel__copy">
+          <small>Doğrudan Görüş</small>
+          <strong>Hemen Ara</strong>
+          <em>{primaryBranch.phone}</em>
+        </span>
+        <span class="appointment-channel__number">01</span>
+      </a>
+
+      <a class="appointment-channel appointment-channel--whatsapp" href={whatsappUrl} rel="noreferrer" data-track-event="appointment_intent" data-track-context="whatsapp">
+        <span class="appointment-channel__icon"><MessageCircle size={31} aria-hidden="true" /></span>
+        <span class="appointment-channel__copy">
+          <small>Hazır Mesajla Başla</small>
+          <strong>WhatsApp’tan Randevu Al</strong>
+          <em>Mesajını gönder, dönüş yapalım.</em>
+        </span>
+        <span class="appointment-channel__number">02</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="appointment-process" aria-labelledby="appointment-process-title">
+    <div class="appointment-process__heading">
+      <p>Nasıl İlerler?</p>
+      <h2 id="appointment-process-title">Üç kısa adım.</h2>
+    </div>
+    <ol>
+      <li>
+        <span>01</span>
+        <Phone size={29} aria-hidden="true" />
+        <div><strong>Bize ulaş</strong><p>Telefonla ara veya hazır WhatsApp mesajını gönder.</p></div>
+      </li>
+      <li>
+        <span>02</span>
+        <CarFront size={29} aria-hidden="true" />
+        <div><strong>Araç bilgisini paylaş</strong><p>Araç ve ihtiyaç duyduğun ekspertiz kapsamı hakkında kısa bilgi ver.</p></div>
+      </li>
+      <li>
+        <span>03</span>
+        <CalendarCheck size={29} aria-hidden="true" />
+        <div><strong>Saati netleştir</strong><p>Uygun gün ve saat teyit edildikten sonra randevun planlansın.</p></div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="appointment-visit" aria-labelledby="appointment-visit-title">
+    <div class="appointment-visit__address">
+      <MapPinned size={36} stroke-width={1.7} aria-hidden="true" />
+      <div>
+        <p>Randevu Noktası</p>
+        <h2 id="appointment-visit-title">{primaryBranch.name}</h2>
+        <address>{primaryBranch.address}</address>
+      </div>
+    </div>
+    <div class="appointment-visit__actions">
+      <ButtonLink href={mapsUrl} eventName="click_directions" eventContext="appointment_location"><Navigation size={18} aria-hidden="true" /> Yol Tarifi Al</ButtonLink>
+      <span><Clock3 size={18} aria-hidden="true" /> {siteSettings.workingHours}</span>
+    </div>
+  </section>
+
+  <section class="appointment-package" aria-labelledby="appointment-package-title">
+    <PackageSearch size={39} stroke-width={1.7} aria-hidden="true" />
+    <div>
+      <p>Paketini Henüz Seçmedin mi?</p>
+      <h2 id="appointment-package-title">Randevudan önce kapsamları karşılaştır.</h2>
+    </div>
+    <ButtonLink href="/ekspertiz-paketleri" variant="dark">Paketleri İncele</ButtonLink>
+  </section>
+</SiteLayout>

@@ -1,0 +1,48 @@
+---
+import { ArrowLeft, Mail } from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import type { LegalPageContent } from "../data/legal-pages";
+import { siteSettings } from "../data/cms";
+
+interface Props {
+  page: LegalPageContent;
+}
+
+const { page } = Astro.props;
+const updatedAt = "3 Eylül 2026";
+---
+
+<SiteLayout title={`${page.title} | Nokta Garage`} description={page.description}>
+  <article class="legal-page">
+    <header class="legal-page__header">
+      <a href="/iletisim"><ArrowLeft size={17} aria-hidden="true" /> İletişime dön</a>
+      <p>{page.eyebrow}</p>
+      <h1>{page.title}</h1>
+      <span>Son güncelleme: {updatedAt}</span>
+    </header>
+
+    <div class="legal-page__body">
+      <div class="legal-page__content">
+        <p class="legal-page__intro">{page.intro}</p>
+        {page.sections.map((section, index) => (
+          <section id={`bolum-${index + 1}`}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <h2>{section.title}</h2>
+            {section.paragraphs?.map((paragraph) => <p>{paragraph}</p>)}
+            {section.bullets && (
+              <ul>
+                {section.bullets.map((item) => <li>{item}</li>)}
+              </ul>
+            )}
+            {section.notice && <aside>{section.notice}</aside>}
+          </section>
+        ))}
+      </div>
+    </div>
+
+    <footer class="legal-page__contact">
+      <Mail size={25} aria-hidden="true" />
+      <div><span>Metinlerle ilgili iletişim</span><a href={`mailto:${siteSettings.email}`}>{siteSettings.email}</a></div>
+    </footer>
+  </article>
+</SiteLayout>

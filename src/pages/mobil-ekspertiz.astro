@@ -1,0 +1,91 @@
+---
+import { CalendarCheck, ClipboardList, MapPinned, MessageCircle, Phone, ScanSearch } from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import ResponsiveImage from "../components/ResponsiveImage.astro";
+import { siteSettings } from "../data/cms";
+
+const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent("Merhaba, mobil ekspertiz hizmetiniz hakkında bilgi almak istiyorum.")}`;
+---
+
+<SiteLayout
+  title="Mobil Ekspertiz | Nokta Garage"
+  description="Nokta Garage mobil ekspertiz hizmeti; Trakya ve İstanbul Avrupa Yakası için yerinde kontrol desteği ve randevu bilgileri."
+>
+  <section class="mobile-service-hero" aria-labelledby="mobile-service-title">
+    <ResponsiveImage
+      class="mobile-service-hero__image"
+      src="/images/mobile-inspection.webp"
+      width={1600}
+      height={900}
+      alt="Aracın kaporta yüzeyini ölçüm cihazıyla kontrol eden mobil ekspertiz uzmanı"
+      sizes="(max-width: 760px) 100vh, 100vw"
+      fetchpriority="high"
+    />
+    <div class="mobile-service-hero__veil" aria-hidden="true"></div>
+    <div class="mobile-service-hero__content">
+      <p class="eyebrow">Mobil Ekspertiz</p>
+      <h1 id="mobile-service-title">Kontrol desteği aracın bulunduğu yerde.</h1>
+      <p>İhtiyacını paylaş; uygulanabilir kontrol kapsamını, konumu ve randevu detaylarını birlikte netleştirelim.</p>
+      <div class="mobile-service-hero__actions">
+        <ButtonLink href={siteSettings.phoneHref}><Phone size={18} /> Hemen Ara</ButtonLink>
+        <ButtonLink href={whatsappUrl} variant="outline"><MessageCircle size={18} /> WhatsApp</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="mobile-region" aria-labelledby="mobile-region-title">
+    <div class="mobile-region__icon"><MapPinned size={32} aria-hidden="true" /></div>
+    <div>
+      <p>Hizmet Bölgesi</p>
+      <h2 id="mobile-region-title">Trakya'nın tüm şehirlerinde ve İstanbul Avrupa Yakasının tüm ilçelerinde</h2>
+    </div>
+  </section>
+
+  <section class="mobile-service-info" aria-labelledby="mobile-scope-title">
+    <div class="mobile-service-info__heading">
+      <p>Kapsam</p>
+      <h2 id="mobile-scope-title">Yerinde kontrol, ihtiyaca göre netleşir</h2>
+    </div>
+    <div class="mobile-service-info__copy">
+      <p>
+        Mobil ekspertiz, aracın bulunduğu konumda boya ve kaporta kontrollerinin yapılmasını sağlar. Şubeye getirme imkânı olmayan veya araç satın almadan önce bulunduğu yerde ön kontrol yaptırmak isteyen müşteriler için uygundur.
+      </p>
+    </div>
+  </section>
+
+  <section class="mobile-process" aria-labelledby="mobile-process-title">
+    <div class="mobile-process__heading">
+      <p>Nasıl İlerler?</p>
+      <h2 id="mobile-process-title">Üç kısa adım</h2>
+    </div>
+    <ol class="mobile-process__steps">
+      <li>
+        <span>01</span>
+        <ClipboardList size={28} aria-hidden="true" />
+        <div><strong>İhtiyacını paylaş</strong><p>Araç konumunu ve talep ettiğin kontrolü telefon veya WhatsApp üzerinden ilet.</p></div>
+      </li>
+      <li>
+        <span>02</span>
+        <CalendarCheck size={28} aria-hidden="true" />
+        <div><strong>Kapsamı netleştir</strong><p>Uygulanabilir kontroller, ücret ve randevu zamanı önceden netleştirilir.</p></div>
+      </li>
+      <li>
+        <span>03</span>
+        <ScanSearch size={28} aria-hidden="true" />
+        <div><strong>Kontrol gerçekleştirilsin</strong><p>Mutabık kalınan kontroller aracın bulunduğu konumda uygulanır.</p></div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="mobile-service-cta" aria-labelledby="mobile-cta-title">
+    <div>
+      <p>Randevu ve Bilgi</p>
+      <h2 id="mobile-cta-title">Konumu gönder, uygunluğu görüşelim.</h2>
+    </div>
+    <div class="mobile-service-cta__actions">
+      <ButtonLink href={siteSettings.phoneHref}>Hemen Ara</ButtonLink>
+      <ButtonLink href={whatsappUrl} variant="outline">WhatsApp’tan Yaz</ButtonLink>
+    </div>
+  </section>
+</SiteLayout>

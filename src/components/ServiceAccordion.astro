@@ -1,0 +1,26 @@
+---
+import { ChevronDown } from "@lucide/astro";
+
+interface Props {
+  title: string;
+  category: string;
+  description: string;
+  open?: boolean;
+}
+
+const { title, category, description, open = false } = Astro.props;
+---
+
+<details class="service-card" open={open}>
+  <summary>
+    <span class="service-card__icon"><slot name="icon" /></span>
+    <span class="service-card__title">
+      <small>{category}</small>
+      <strong>{title}</strong>
+    </span>
+    <i class="service-card__chevron"><ChevronDown size={22} stroke-width={1.9} /></i>
+  </summary>
+  <div class="service-card__content">
+    <p>{description}</p>
+  </div>
+</details>

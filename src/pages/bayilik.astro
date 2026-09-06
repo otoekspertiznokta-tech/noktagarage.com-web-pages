@@ -1,0 +1,116 @@
+---
+import {
+  ArrowDownRight,
+  BadgeCheck,
+  Building2,
+  ClipboardCheck,
+  Handshake,
+  Mail,
+  MapPinned,
+  MessageCircle,
+  Phone,
+  ScanLine,
+  Store,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import { siteSettings } from "../data/cms";
+
+const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent("Merhaba, Nokta Garage bayiliği hakkında bilgi almak istiyorum.")}`;
+const emailUrl = `mailto:${siteSettings.email}?subject=${encodeURIComponent("Nokta Garage Bayilik Bilgi Talebi")}`;
+
+const advantages = [
+  { title: "Kurumsal kimlik", description: "Marka kullanımı ve görsel iletişim yapısının görüşme kapsamında değerlendirilmesi.", icon: BadgeCheck },
+  { title: "Hizmet yapısı", description: "Ekspertiz paketleri, hizmet seçenekleri ve müşteri akışının birlikte ele alınması.", icon: ScanLine },
+  { title: "Operasyon yaklaşımı", description: "Kontrol, raporlama ve müşteri bilgilendirme sürecinin ortak bir çerçevede planlanması.", icon: ClipboardCheck },
+];
+
+const process = [
+  ["01", "İlk görüşme", "Adayın hedefi, bölgesi ve mevcut işletme durumu hakkında temel bilgi alınır."],
+  ["02", "Ön değerlendirme", "Lokasyon, hizmet alanı ve operasyon koşulları karşılıklı olarak değerlendirilir."],
+  ["03", "Model ve koşullar", "Bayilik modeli, kapsam, sorumluluklar ve ticari koşullar görüşmede netleştirilir."],
+  ["04", "Karşılıklı karar", "Her iki taraf için uygunluk oluşursa sonraki adımlar birlikte planlanır."],
+];
+---
+
+<SiteLayout
+  title="Bayilik | Nokta Garage"
+  description="Nokta Garage oto ekspertiz bayiliği hakkında başlangıç bilgileri, değerlendirme süreci ve doğrudan iletişim kanalları."
+>
+  <section class="franchise-hero" aria-labelledby="franchise-title">
+    <div class="franchise-hero__content">
+      <p class="eyebrow">Nokta Garage Bayilik</p>
+      <h1 id="franchise-title">Bulunduğun bölgede yeni bir nokta oluştur.</h1>
+      <p>Oto ekspertiz alanında kendi işletmesini kurmak veya mevcut işletmesini yeni bir yapı altında geliştirmek isteyen girişimcilerle tanışmak istiyoruz.</p>
+      <div class="franchise-hero__actions">
+        <ButtonLink href={whatsappUrl} eventName="franchise_contact" eventContext="whatsapp_hero"><MessageCircle size={18} /> WhatsApp’tan Bilgi Al</ButtonLink>
+        <ButtonLink href={siteSettings.phoneHref} variant="outline" eventName="franchise_contact" eventContext="phone_hero"><Phone size={18} /> Hemen Ara</ButtonLink>
+      </div>
+    </div>
+    <div class="franchise-hero__panel" aria-label="Bayilik iletişim seçenekleri">
+      <div class="franchise-hero__panel-top">
+        <Store size={45} stroke-width={1.55} aria-hidden="true" />
+        <span>YENİ NOKTA</span>
+      </div>
+      <strong>Başvurudan önce doğrudan görüşelim.</strong>
+      <a href={emailUrl} data-track-event="franchise_contact" data-track-context="email_hero"><Mail size={19} aria-hidden="true" /> E-posta gönder <ArrowDownRight size={20} aria-hidden="true" /></a>
+    </div>
+  </section>
+
+  <section class="franchise-advantages" aria-labelledby="franchise-advantages-title">
+    <div class="corporate-section-heading">
+      <p>Başlangıç Modeli</p>
+      <h2 id="franchise-advantages-title">Birlikte değerlendirilecek başlıklar.</h2>
+    </div>
+    <div class="franchise-advantages__grid">
+      {advantages.map(({ title, description, icon: Icon }, index) => (
+        <article>
+          <div><span>{String(index + 1).padStart(2, "0")}</span><Icon size={31} stroke-width={1.7} aria-hidden="true" /></div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="franchise-process" aria-labelledby="franchise-process-title">
+    <div class="franchise-process__heading">
+      <p>Değerlendirme Süreci</p>
+      <h2 id="franchise-process-title">Önce tanışalım, sonra modeli netleştirelim.</h2>
+    </div>
+    <ol>
+      {process.map(([number, title, description]) => (
+        <li>
+          <span>{number}</span>
+          <div><strong>{title}</strong><p>{description}</p></div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="franchise-requirements" aria-labelledby="franchise-requirements-title">
+    <div class="franchise-requirements__intro">
+      <Building2 size={44} stroke-width={1.55} aria-hidden="true" />
+      <p>Ön Görüşme Başlıkları</p>
+      <h2 id="franchise-requirements-title">Bölge, işletme ve operasyon uygunluğu.</h2>
+    </div>
+    <div class="franchise-requirements__list">
+      <span><MapPinned size={23} aria-hidden="true" /><strong>Lokasyon</strong><em>Hizmet verilecek bölge ve işletme noktası</em></span>
+      <span><Handshake size={23} aria-hidden="true" /><strong>İşletme yaklaşımı</strong><em>Müşteri iletişimi ve hizmet kalitesine verilen önem</em></span>
+      <span><ClipboardCheck size={23} aria-hidden="true" /><strong>Operasyon</strong><em>Ekip, ekipman ve günlük işleyişin planlanabilir olması</em></span>
+      <small>Bunlar kesin kabul kriterleri değildir; ön görüşmede değerlendirilecek başlangıç başlıklarıdır.</small>
+    </div>
+  </section>
+
+  <section class="franchise-contact" aria-labelledby="franchise-contact-title">
+    <div>
+      <p>Bayilik Hakkında Bilgi Al</p>
+      <h2 id="franchise-contact-title">Bölgeni ve işletme planını paylaş.</h2>
+    </div>
+    <div class="franchise-contact__channels">
+      <a href={siteSettings.phoneHref} data-track-event="franchise_contact" data-track-context="phone"><Phone size={22} aria-hidden="true" /><span><small>Telefon</small><strong>{siteSettings.primaryPhone}</strong></span></a>
+      <a href={whatsappUrl} data-track-event="franchise_contact" data-track-context="whatsapp"><MessageCircle size={22} aria-hidden="true" /><span><small>WhatsApp</small><strong>Hazır mesajla başla</strong></span></a>
+      <a href={emailUrl} data-track-event="franchise_contact" data-track-context="email"><Mail size={22} aria-hidden="true" /><span><small>E-posta</small><strong>Bilgi talebi gönder</strong></span></a>
+    </div>
+  </section>
+</SiteLayout>

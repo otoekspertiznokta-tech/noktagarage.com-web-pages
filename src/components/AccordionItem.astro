@@ -1,0 +1,24 @@
+---
+import { ChevronDown } from "@lucide/astro";
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  open?: boolean;
+}
+
+const { title, eyebrow, open = false } = Astro.props;
+---
+
+<details class="accordion-item" open={open}>
+  <summary>
+    <span>
+      {eyebrow && <small>{eyebrow}</small>}
+      <strong>{title}</strong>
+    </span>
+    <i><ChevronDown size={22} stroke-width={1.9} /></i>
+  </summary>
+  <div class="accordion-item__content">
+    <slot />
+  </div>
+</details>

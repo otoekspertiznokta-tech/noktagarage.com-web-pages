@@ -1,0 +1,82 @@
+---
+import { ArrowUpRight, BookOpen, CalendarDays } from "@lucide/astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import ResponsiveImage from "../../components/ResponsiveImage.astro";
+import { blogCategories } from "../../data/blog-posts";
+import { siteContent } from "../../data/cms";
+
+const blogPosts = siteContent.blogPosts;
+const [featuredPost, ...otherPosts] = blogPosts;
+---
+
+<SiteLayout
+  title="Oto Ekspertiz Rehberi ve Blog | Nokta Garage"
+  description="İkinci el araç alımı, oto ekspertiz kontrolleri, boya ölçümü ve araç bakımı hakkında anlaşılır rehberler."
+  canonicalPath="/blog"
+  ogImage={featuredPost.coverImage}
+>
+  <section class="blog-index" aria-labelledby="blog-index-title">
+    <header class="blog-index__hero">
+      <div>
+        <p class="eyebrow">Bilgi Merkezi</p>
+        <h1 id="blog-index-title">Aracı daha bilinçli değerlendir.</h1>
+        <p>İkinci el araç alımı ve ekspertiz sürecinde karşılaşabileceğin temel konuları sade ve anlaşılır rehberlerle incele.</p>
+      </div>
+      <BookOpen size={74} stroke-width={1.2} aria-hidden="true" />
+    </header>
+
+    <div class="blog-categories" aria-label="Blog kategorileri">
+      {blogCategories.map((category, index) => (
+        <span><small>{String(index + 1).padStart(2, "0")}</small>{category}</span>
+      ))}
+    </div>
+
+    <section class="blog-featured" aria-labelledby="featured-post-title">
+      <a class="blog-featured__image" href={`/blog/${featuredPost.slug}`} aria-label={`${featuredPost.title} yazısını oku`}>
+        <ResponsiveImage
+          src={featuredPost.coverImage}
+          width={1600}
+          height={779}
+          sizes="(max-width: 760px) 100vw, 58vw"
+          alt={featuredPost.coverAlt}
+          fetchpriority="high"
+        />
+        <span>Öne Çıkan</span>
+      </a>
+      <div class="blog-featured__content">
+        <div class="blog-card__meta">
+          <span>{featuredPost.category}</span>
+          <time datetime={featuredPost.publishedAt}><CalendarDays size={15} aria-hidden="true" /> {featuredPost.displayDate}</time>
+        </div>
+        <h2 id="featured-post-title"><a href={`/blog/${featuredPost.slug}`}>{featuredPost.title}</a></h2>
+        <p>{featuredPost.summary}</p>
+        <a class="blog-read-link" href={`/blog/${featuredPost.slug}`}>Yazıyı Oku <ArrowUpRight size={19} aria-hidden="true" /></a>
+      </div>
+    </section>
+
+    <section class="blog-latest" aria-labelledby="latest-posts-title">
+      <div class="blog-latest__heading">
+        <p>Son Yazılar</p>
+        <h2 id="latest-posts-title">Ekspertiz rehberleri</h2>
+      </div>
+      <div class="blog-grid">
+        {otherPosts.map((post) => (
+          <article class="blog-card">
+            <a class="blog-card__image" href={`/blog/${post.slug}`} aria-label={`${post.title} yazısını oku`}>
+              <ResponsiveImage src={post.coverImage} width={1600} height={779} alt={post.coverAlt} loading="lazy" sizes="(max-width: 760px) 100vw, 33vw" />
+            </a>
+            <div class="blog-card__body">
+              <div class="blog-card__meta">
+                <span>{post.category}</span>
+                <time datetime={post.publishedAt}>{post.displayDate}</time>
+              </div>
+              <h3><a href={`/blog/${post.slug}`}>{post.title}</a></h3>
+              <p>{post.summary}</p>
+              <a class="blog-read-link" href={`/blog/${post.slug}`}>Devamını Oku <ArrowUpRight size={18} aria-hidden="true" /></a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  </section>
+</SiteLayout>

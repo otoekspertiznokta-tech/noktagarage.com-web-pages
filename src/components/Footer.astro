@@ -1,0 +1,54 @@
+---
+import { ChevronDown, MapPin, Phone, Mail } from "@lucide/astro";
+import { siteSettings } from "../data/cms";
+---
+
+<footer class="site-footer">
+  <div class="site-footer__top">
+    <div class="site-footer__brand">
+      <a class="brand-lockup brand-lockup--footer" href="/" aria-label="Nokta Garage ana sayfa">
+        <img src={siteSettings.logo} alt="" width="1254" height="1254" loading="lazy" />
+        <span>
+          <strong>{siteSettings.brandName.toUpperCase()}</strong>
+          <small>{siteSettings.brandDescriptor.toUpperCase()}</small>
+        </span>
+      </a>
+      <p>{siteSettings.footerText}</p>
+    </div>
+
+    <details class="footer-group" open>
+      <summary>Hizmetler <ChevronDown size={17} /></summary>
+      <div>
+        <a href="/ekspertiz-paketleri">Ekspertiz Paketleri</a>
+        <a href="/hizmetler">Hizmetler</a>
+        <a href="/mobil-ekspertiz">Mobil Ekspertiz</a>
+        <a href="/uzaktan-ekspertiz">Uzaktan Ekspertiz</a>
+      </div>
+    </details>
+
+    <details class="footer-group" open>
+      <summary>Kurumsal <ChevronDown size={17} /></summary>
+      <div>
+        <a href="/hakkimizda">Hakkımızda</a>
+        <a href="/bayilik">Bayilik</a>
+        <a href="/insan-kaynaklari">İnsan Kaynakları</a>
+        <a href="/blog">Blog</a>
+      </div>
+    </details>
+
+    <div class="site-footer__contact">
+      <h2>İletişim</h2>
+      <a href={siteSettings.phoneHref} data-track-event="click_phone" data-track-context="footer"><Phone size={17} /> {siteSettings.primaryPhone}</a>
+      <a href={`mailto:${siteSettings.email}`}><Mail size={17} /> E-posta gönder</a>
+      <a href={siteSettings.mapsUrl} rel="noreferrer" data-track-event="click_directions" data-track-context="footer"><MapPin size={17} /> Yol tarifi al</a>
+      <small>{siteSettings.workingHours}</small>
+    </div>
+  </div>
+
+  <div class="site-footer__bottom">
+    <span>{siteSettings.copyright}</span>
+    <nav aria-label="Yasal bağlantılar">
+      {siteSettings.navigation.legal.map(({ label, href }) => <a href={href}>{label}</a>)}
+    </nav>
+  </div>
+</footer>

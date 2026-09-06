@@ -1,0 +1,241 @@
+---
+import {
+  CircleAlert,
+  CircleCheck,
+  FileSearch,
+  LoaderCircle,
+  Search,
+  ShieldCheck,
+  TriangleAlert,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Rapor Sorgula | Nokta Garage"
+  description="Nokta Garage ekspertiz raporunun sistemde kayıtlı ve orijinal olup olmadığını plaka ve rapor numarasıyla kontrol edin."
+  hideStickyContact
+>
+  <section class="report-query" aria-labelledby="report-query-title">
+    <div class="report-query__intro">
+      <p class="eyebrow">Rapor Doğrulama</p>
+      <h1 id="report-query-title">Raporun orijinalliğini kontrol et.</h1>
+      <p>Plaka ve rapor numarasını birlikte girerek raporun sistemimizde kayıtlı olup olmadığını sorgula.</p>
+    </div>
+
+    <div class="report-query__workspace">
+      <form class="report-form" data-report-form data-track-event="report_verification_submit" data-track-trigger="submit" data-track-context="report_query" novalidate>
+        <div class="report-form__heading">
+          <FileSearch size={30} stroke-width={1.8} aria-hidden="true" />
+          <div>
+            <h2>Rapor bilgileri</h2>
+            <p>Her iki alanı da rapor üzerinde yazdığı şekilde doldur.</p>
+          </div>
+        </div>
+
+        <div class="report-form__fields">
+          <label class="report-field">
+            <span>Plaka</span>
+            <input
+              type="text"
+              name="plate"
+              placeholder="Örn. 39 ABC 123"
+              minlength="5"
+              maxlength="11"
+              inputmode="text"
+              autocapitalize="characters"
+              autocomplete="off"
+              spellcheck="false"
+              enterkeyhint="next"
+              aria-describedby="plate-error"
+              required
+              data-plate
+            />
+            <em id="plate-error" data-plate-error></em>
+          </label>
+
+          <label class="report-field">
+            <span>Rapor No</span>
+            <input
+              type="text"
+              name="reportNumber"
+              placeholder="Rapor numarasını gir"
+              minlength="1"
+              maxlength="100"
+              inputmode="text"
+              autocapitalize="characters"
+              autocomplete="off"
+              spellcheck="false"
+              enterkeyhint="go"
+              aria-describedby="report-number-error"
+              required
+              data-report-number
+            />
+            <em id="report-number-error" data-report-number-error></em>
+          </label>
+        </div>
+
+        <button class="report-form__submit" type="submit" data-report-submit>
+          <Search size={19} stroke-width={2.1} aria-hidden="true" />
+          <span>Raporu Sorgula</span>
+        </button>
+      </form>
+
+      <div class="report-result" aria-live="polite" aria-atomic="true" data-report-result hidden>
+        <div class="report-state report-state--loading" data-state="LOADING" hidden>
+          <LoaderCircle size={38} stroke-width={1.7} aria-hidden="true" />
+          <div>
+            <strong>Rapor kontrol ediliyor</strong>
+            <p>Lütfen bu ekranı kapatmadan kısa süre bekleyin.</p>
+          </div>
+        </div>
+
+        <div class="report-state report-state--valid" data-state="VALID" hidden>
+          <div class="report-verification__heading">
+            <span class="report-verification__icon"><CircleCheck size={42} stroke-width={2} aria-hidden="true" /></span>
+            <p>Doğrulama Başarılı</p>
+            <strong id="report-verification-title" tabindex="-1">Raporunuz orijinaldir</strong>
+            <span>Bu rapor Nokta Garage sisteminde kayıtlı ve geçerlidir.</span>
+          </div>
+
+          <dl class="report-verification__details">
+            <div><dt>Rapor Numarası</dt><dd data-report-output="reportNumber"></dd></div>
+            <div><dt>Rapor Tarihi</dt><dd data-report-output="reportDate"></dd></div>
+            <div><dt>Plaka</dt><dd data-report-output="plate"></dd></div>
+            <div><dt>Şasi Son 6 Karakter</dt><dd data-report-output="chassisLast6"></dd></div>
+            <div><dt>Paket</dt><dd data-report-output="packageName"></dd></div>
+            <div><dt>Düzenleyen Bayi</dt><dd data-report-output="dealerName"></dd></div>
+          </dl>
+
+          <div class="report-verification__notice">
+            <ShieldCheck size={21} stroke-width={1.8} aria-hidden="true" />
+            <p>Yukarıdaki bilgilerin elinizdeki raporla eşleştiğini kontrol edin.</p>
+          </div>
+        </div>
+
+        <div class="report-state report-state--not-found" data-state="NOT_FOUND" hidden>
+          <CircleAlert size={38} stroke-width={1.7} aria-hidden="true" />
+          <div>
+            <strong>Eşleşme bulunamadı</strong>
+            <p>Girilen bilgilerle eşleşen bir rapor bulunamadı.</p>
+          </div>
+        </div>
+
+        <div class="report-state report-state--unavailable" data-state="SERVICE_UNAVAILABLE" hidden>
+          <TriangleAlert size={38} stroke-width={1.7} aria-hidden="true" />
+          <div>
+            <strong>Şu anda kontrol edilemiyor</strong>
+            <p>Rapor sorgulama hizmetine şu anda ulaşılamıyor. Lütfen kısa süre sonra tekrar deneyin.</p>
+          </div>
+        </div>
+
+        <div class="report-state report-state--validation" data-state="VALIDATION_ERROR" hidden>
+          <CircleAlert size={38} stroke-width={1.7} aria-hidden="true" />
+          <div>
+            <strong>Bilgileri kontrol et</strong>
+            <p>Devam etmek için hatalı veya eksik alanları düzelt.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</SiteLayout>
+
+<script>
+  import { reportQueryAdapter, validateReportQuery, type VerifiedReport } from "../lib/report-query-adapter";
+
+  const form = document.querySelector<HTMLFormElement>("[data-report-form]");
+  const plateInput = document.querySelector<HTMLInputElement>("[data-plate]");
+  const reportNumberInput = document.querySelector<HTMLInputElement>("[data-report-number]");
+  const plateError = document.querySelector<HTMLElement>("[data-plate-error]");
+  const reportNumberError = document.querySelector<HTMLElement>("[data-report-number-error]");
+  const submitButton = document.querySelector<HTMLButtonElement>("[data-report-submit]");
+  const states = document.querySelectorAll<HTMLElement>("[data-state]");
+  const resultContainer = document.querySelector<HTMLElement>("[data-report-result]");
+  const verificationTitle = document.querySelector<HTMLElement>("#report-verification-title");
+  const reportOutputs = document.querySelectorAll<HTMLElement>("[data-report-output]");
+
+  const formatReportDate = (value: string) => {
+    const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return isoDate ? `${isoDate[3]}.${isoDate[2]}.${isoDate[1]}` : value;
+  };
+
+  const showReport = (report: VerifiedReport) => {
+    reportOutputs.forEach((element) => {
+      const field = element.dataset.reportOutput as keyof VerifiedReport | undefined;
+      if (!field) return;
+      element.textContent = field === "reportDate" ? formatReportDate(report[field]) : report[field];
+    });
+  };
+
+  const showState = (state: string) => {
+    if (resultContainer) resultContainer.hidden = false;
+    states.forEach((element) => {
+      element.hidden = element.dataset.state !== state;
+    });
+  };
+
+  const setFieldError = (input: HTMLInputElement | null, target: HTMLElement | null, message = "") => {
+    if (!input || !target) return;
+    target.textContent = message;
+    input.setAttribute("aria-invalid", String(Boolean(message)));
+  };
+
+  const clearErrors = () => {
+    setFieldError(plateInput, plateError);
+    setFieldError(reportNumberInput, reportNumberError);
+  };
+
+  plateInput?.addEventListener("input", () => setFieldError(plateInput, plateError));
+  reportNumberInput?.addEventListener("input", () => setFieldError(reportNumberInput, reportNumberError));
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!plateInput || !reportNumberInput || !submitButton) return;
+
+    clearErrors();
+    const validation = validateReportQuery({
+      plate: plateInput.value,
+      reportNumber: reportNumberInput.value,
+    });
+
+    plateInput.value = validation.normalized.plate;
+    reportNumberInput.value = validation.normalized.reportNumber;
+
+    if (!validation.valid) {
+      setFieldError(plateInput, plateError, validation.errors.plate);
+      setFieldError(reportNumberInput, reportNumberError, validation.errors.reportNumber);
+      showState("VALIDATION_ERROR");
+      (validation.errors.plate ? plateInput : reportNumberInput).focus();
+      return;
+    }
+
+    showState("LOADING");
+    submitButton.disabled = true;
+    submitButton.setAttribute("aria-busy", "true");
+
+    try {
+      const result = await reportQueryAdapter.query(validation.normalized);
+      if (result.status === "VALID") showReport(result.report);
+      showState(result.status);
+      resultContainer?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (result.status === "VALID") verificationTitle?.focus({ preventScroll: true });
+    } catch {
+      showState("SERVICE_UNAVAILABLE");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.removeAttribute("aria-busy");
+    }
+  });
+
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted && submitButton) {
+      submitButton.disabled = false;
+      submitButton.removeAttribute("aria-busy");
+      if (resultContainer) resultContainer.hidden = true;
+      states.forEach((element) => { element.hidden = true; });
+    }
+  });
+</script>

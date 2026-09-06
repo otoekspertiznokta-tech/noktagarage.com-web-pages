@@ -1,0 +1,82 @@
+---
+import {
+  BriefcaseBusiness,
+  CarFront,
+  Mail,
+  MessageSquareText,
+  Phone,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Wrench,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import { siteSettings } from "../data/cms";
+
+const cvEmailUrl = `mailto:${siteSettings.email}?subject=${encodeURIComponent("Nokta Garage İş Başvurusu - CV")}`;
+
+const workAreas = [
+  { title: "Ekspertiz operasyonu", description: "Araç kontrolleri, ekipman kullanımı ve raporlama süreçlerinde görev alan saha rolleri.", icon: CarFront },
+  { title: "Müşteri iletişimi", description: "Randevu, karşılama ve hizmet süreci hakkında açık bilgi akışını sağlayan roller.", icon: MessageSquareText },
+  { title: "Operasyon desteği", description: "Günlük işleyiş, düzen ve teknik hazırlık süreçlerini destekleyen roller.", icon: Wrench },
+];
+---
+
+<SiteLayout
+  title="İnsan Kaynakları | Nokta Garage"
+  description="Nokta Garage çalışma alanları, ekip yaklaşımı ve e-posta üzerinden genel iş başvurusu bilgileri."
+>
+  <section class="careers-hero" aria-labelledby="careers-title">
+    <div class="careers-hero__content">
+      <p class="eyebrow">İnsan Kaynakları</p>
+      <h1 id="careers-title">İşini dikkatle yapan insanlarla tanışmak istiyoruz.</h1>
+      <p>Otomotive ilgi duyan, öğrenmeye açık ve müşteri iletişimine önem veren adaylar genel iş başvurusu için özgeçmişini paylaşabilir.</p>
+      <div class="careers-hero__actions">
+        <ButtonLink href={cvEmailUrl}><Send size={18} /> CV Gönder</ButtonLink>
+        <ButtonLink href={siteSettings.phoneHref} variant="outline"><Phone size={18} /> Bizi Ara</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="careers-areas" aria-labelledby="careers-areas-title">
+    <div class="corporate-section-heading">
+      <p>Çalışma Alanları</p>
+      <h2 id="careers-areas-title">Sahadan müşteri iletişimine.</h2>
+    </div>
+    <div class="careers-areas__grid">
+      {workAreas.map(({ title, description, icon: Icon }, index) => (
+        <article>
+          <div><span>{String(index + 1).padStart(2, "0")}</span><Icon size={31} stroke-width={1.7} aria-hidden="true" /></div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="careers-principles" aria-labelledby="careers-principles-title">
+    <div class="careers-principles__heading">
+      <BriefcaseBusiness size={45} stroke-width={1.55} aria-hidden="true" />
+      <p>Ekip Yaklaşımı</p>
+      <h2 id="careers-principles-title">İşin temelinde üç şey var.</h2>
+    </div>
+    <div class="careers-principles__list">
+      <article><ShieldCheck size={27} aria-hidden="true" /><div><strong>Dikkat</strong><p>Araç kontrollerinde ayrıntıları atlamadan, sorumlulukla çalışmak.</p></div></article>
+      <article><MessageSquareText size={27} aria-hidden="true" /><div><strong>Açık iletişim</strong><p>Bulguları ve süreci ekip arkadaşlarına ve müşteriye anlaşılır biçimde aktarmak.</p></div></article>
+      <article><Sparkles size={27} aria-hidden="true" /><div><strong>Gelişim</strong><p>Yeni araçları, ekipmanları ve çalışma yöntemlerini öğrenmeye açık olmak.</p></div></article>
+    </div>
+  </section>
+
+  <section class="careers-application" aria-labelledby="careers-application-title">
+    <div>
+      <p>Genel İş Başvurusu</p>
+      <h2 id="careers-application-title">Kendini ve ilgilendiğin çalışma alanını anlat.</h2>
+      <span>Özgeçmişini e-posta ile gönderebilirsin. Başvurular, uygun bir ihtiyaç oluştuğunda değerlendirilir.</span>
+    </div>
+    <div class="careers-application__contact">
+      <a href={cvEmailUrl}><Mail size={24} aria-hidden="true" /><span><small>E-posta</small><strong>CV Gönder</strong></span></a>
+      <a href={siteSettings.phoneHref}><Phone size={24} aria-hidden="true" /><span><small>Telefon</small><strong>{siteSettings.primaryPhone}</strong></span></a>
+    </div>
+  </section>
+</SiteLayout>

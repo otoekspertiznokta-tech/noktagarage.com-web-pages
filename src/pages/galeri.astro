@@ -1,0 +1,46 @@
+---
+import { Camera, Images } from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { cmsMediaSources, siteContent } from "../data/cms";
+
+const galleryImages = siteContent.gallery
+  .filter((item) => item.active && item.image)
+  .sort((a, b) => a.order - b.order);
+---
+
+<SiteLayout
+  title="Galeri | Nokta Garage"
+  description="Nokta Garage Lüleburgaz şubesi, ekspertiz cihazları ve araç kontrol sürecinden fotoğraflar."
+>
+  <section class="gallery-page" aria-labelledby="gallery-title">
+    <div class="gallery-page__intro">
+      <p class="eyebrow">Nokta Garage Galeri</p>
+      <h1 id="gallery-title">Garajı ve ekspertiz sürecini yakından gör.</h1>
+      <p>Nokta Garage’ın çalışma alanı, ekipmanları ve ekspertiz sürecinden kareler.</p>
+    </div>
+
+    <div class="gallery-board" data-gallery>
+      <div class="gallery-board__top">
+        <Images size={27} aria-hidden="true" />
+        <span>Fotoğraf Galerisi</span>
+        {galleryImages.length > 0 && <strong>{galleryImages.length} fotoğraf</strong>}
+      </div>
+
+      {galleryImages.length > 0 ? (
+        <div class="gallery-board__grid">
+          {galleryImages.map((item) => (
+            <figure>
+              <img src={item.image} srcset={cmsMediaSources[item.image ?? ""]} sizes="(max-width: 760px) 100vw, 50vw" alt={item.alt} width="1280" height="720" loading="lazy" decoding="async" />
+              {item.caption && <figcaption>{item.caption}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      ) : (
+        <div class="gallery-board__empty">
+          <Camera size={62} stroke-width={1.35} aria-hidden="true" />
+          <strong>Galeride henüz fotoğraf bulunmuyor</strong>
+        </div>
+      )}
+    </div>
+  </section>
+</SiteLayout>

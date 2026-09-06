@@ -1,0 +1,100 @@
+---
+import {
+  CalendarClock,
+  Clock3,
+  MapPin,
+  MessageCircle,
+  Navigation,
+  Phone,
+  PhoneCall,
+} from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import { primaryBranch, siteSettings } from "../data/cms";
+import { localBusinessStructuredData } from "../data/structured-data";
+
+const phoneUrl = primaryBranch.phoneHref;
+const whatsappUrl = `${primaryBranch.whatsapp}?text=${encodeURIComponent(siteSettings.defaultWhatsappMessage)}`;
+const mapsUrl = primaryBranch.mapsUrl;
+const emailUrl = `mailto:${primaryBranch.email}`;
+---
+
+<SiteLayout
+  title="İletişim | Nokta Garage"
+  description="Nokta Garage Lüleburgaz şubesine telefon, WhatsApp, e-posta ve yol tarifi üzerinden ulaşın. Her gün 08:00–18:00 açığız."
+  structuredData={localBusinessStructuredData}
+>
+  <section class="contact-hero" aria-labelledby="contact-title">
+    <div class="contact-hero__intro">
+      <p class="eyebrow">İletişim</p>
+      <h1 id="contact-title">Aracını konuşalım, doğru kapsamı netleştirelim.</h1>
+      <p>Randevu, paket seçimi, mobil veya uzaktan ekspertiz hakkında doğrudan ekibimize ulaşabilirsin.</p>
+      <div class="contact-hero__status">
+        <span><Clock3 size={18} aria-hidden="true" /> {primaryBranch.workingHours}</span>
+        <span><MapPin size={18} aria-hidden="true" /> {primaryBranch.district} / {primaryBranch.city}</span>
+      </div>
+    </div>
+
+    <div class="contact-hero__primary">
+      <PhoneCall size={42} stroke-width={1.6} aria-hidden="true" />
+      <span>Doğrudan İletişim</span>
+      <strong>{primaryBranch.phone}</strong>
+      <p>Randevu ve hizmet bilgisi için çalışma saatleri içinde arayabilirsin.</p>
+      <ButtonLink href={phoneUrl} variant="dark" eventName="click_phone" eventContext="contact_hero"><Phone size={18} /> Hemen Ara</ButtonLink>
+    </div>
+  </section>
+
+  <section class="contact-channels" aria-label="İletişim kanalları">
+    <a href={phoneUrl} data-track-event="click_phone" data-track-context="contact_channels">
+      <div><span>01</span><Phone size={31} stroke-width={1.7} aria-hidden="true" /></div>
+      <strong>Telefon</strong>
+      <p>Ekibimizle doğrudan görüş.</p>
+      <em>{primaryBranch.phone}</em>
+    </a>
+    <a href={whatsappUrl} rel="noreferrer" data-track-event="click_whatsapp" data-track-context="contact_channels">
+      <div><span>02</span><MessageCircle size={31} stroke-width={1.7} aria-hidden="true" /></div>
+      <strong>WhatsApp</strong>
+      <p>Hazır mesajla konuşmayı başlat.</p>
+      <em>Mesaj gönder</em>
+    </a>
+    <a href={mapsUrl} rel="noreferrer" data-track-event="click_directions" data-track-context="contact_channels">
+      <div><span>03</span><Navigation size={31} stroke-width={1.7} aria-hidden="true" /></div>
+      <strong>Yol Tarifi</strong>
+      <p>Şubeye en uygun rotayı aç.</p>
+      <em>Haritada görüntüle</em>
+    </a>
+  </section>
+
+  <section class="contact-location" aria-labelledby="contact-location-title">
+    <div class="contact-location__heading">
+      <MapPin size={45} stroke-width={1.55} aria-hidden="true" />
+      <p>Şube Bilgileri</p>
+        <h2 id="contact-location-title">{primaryBranch.name}</h2>
+    </div>
+    <div class="contact-location__details">
+      <div>
+        <span>Adres</span>
+        <address>{primaryBranch.address}</address>
+      </div>
+      <div>
+        <span>Çalışma Saatleri</span>
+        <strong>{primaryBranch.workingHours}</strong>
+      </div>
+      <div>
+        <span>E-posta</span>
+        <a href={emailUrl}>{primaryBranch.email}</a>
+      </div>
+      <ButtonLink href={mapsUrl} variant="dark" eventName="click_directions" eventContext="contact_location"><Navigation size={18} /> Yol Tarifi Al</ButtonLink>
+    </div>
+  </section>
+
+  <section class="contact-appointment" aria-labelledby="contact-appointment-title">
+    <CalendarClock size={42} stroke-width={1.6} aria-hidden="true" />
+    <div>
+      <p>Ziyaret Öncesi</p>
+      <h2 id="contact-appointment-title">Beklememek için randevunu önceden planla.</h2>
+    </div>
+    <ButtonLink href="/randevu">Randevu Seçenekleri</ButtonLink>
+  </section>
+
+</SiteLayout>

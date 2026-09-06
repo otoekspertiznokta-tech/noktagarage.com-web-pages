@@ -1,0 +1,18 @@
+---
+import { ArrowUpRight } from "@lucide/astro";
+
+interface Props {
+  label: string;
+  href?: string;
+  tone?: "red" | "gray" | "white";
+}
+
+const { label, href, tone = "gray" } = Astro.props;
+const Tag = href ? "a" : "article";
+---
+
+<Tag class:list={["quick-card", `quick-card--${tone}`]} {...(href ? { href } : {})}>
+  <div class="quick-card__icon"><slot name="icon" /></div>
+  <strong>{label}</strong>
+  <ArrowUpRight class="quick-card__arrow" size={22} stroke-width={1.8} />
+</Tag>

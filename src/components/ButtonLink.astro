@@ -1,0 +1,22 @@
+---
+import { ArrowUpRight } from "@lucide/astro";
+
+interface Props {
+  href: string;
+  variant?: "light" | "dark" | "outline";
+  eventName?: string;
+  eventContext?: string;
+}
+
+const { href, variant = "light", eventName, eventContext } = Astro.props;
+---
+
+<a
+  class:list={["button-link", `button-link--${variant}`]}
+  href={href}
+  data-track-event={eventName}
+  data-track-context={eventContext}
+>
+  <span><slot /></span>
+  <ArrowUpRight size={18} stroke-width={2} />
+</a>

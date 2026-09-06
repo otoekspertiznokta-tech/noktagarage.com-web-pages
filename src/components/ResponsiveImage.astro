@@ -1,0 +1,55 @@
+---
+import { cmsMediaSources } from "../data/cms";
+
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  class?: string;
+  sizes?: string;
+  loading?: "eager" | "lazy";
+  fetchpriority?: "high" | "low" | "auto";
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  class: className,
+  sizes = "100vw",
+  loading,
+  fetchpriority,
+} = Astro.props;
+
+const responsiveSources: Record<string, string> = {
+  "/images/home-hero.webp": [
+    "/images/home-hero-640.webp 640w",
+    "/images/home-hero-960.webp 960w",
+    "/images/home-hero-1280.webp 1280w",
+    "/images/home-hero.webp 1600w",
+  ].join(", "),
+  "/images/mobile-inspection.webp": [
+    "/images/mobile-inspection-640.webp 640w",
+    "/images/mobile-inspection-960.webp 960w",
+    "/images/mobile-inspection-1280.webp 1280w",
+    "/images/mobile-inspection.webp 1600w",
+  ].join(", "),
+};
+
+const srcset = responsiveSources[src] ?? cmsMediaSources[src];
+---
+
+<img
+  src={src}
+  srcset={srcset}
+  sizes={srcset ? sizes : undefined}
+  width={width}
+  height={height}
+  alt={alt}
+  class={className}
+  loading={loading}
+  fetchpriority={fetchpriority}
+  decoding="async"
+/>

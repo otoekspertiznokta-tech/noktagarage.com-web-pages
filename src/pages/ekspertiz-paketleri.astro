@@ -1,0 +1,161 @@
+---
+import { Check, Minus, Scale } from "@lucide/astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ButtonLink from "../components/ButtonLink.astro";
+import PackageAccordion from "../components/PackageAccordion.astro";
+import { siteContent } from "../data/cms";
+
+const packageData = siteContent.packages.filter((item) => item.active).sort((a, b) => a.order - b.order);
+
+const serviceNames = [...new Set(packageData.flatMap((item) => item.services))];
+const defaultA = packageData[0];
+const defaultB = packageData[5];
+---
+
+<SiteLayout
+  title="Ekspertiz Paketleri | Nokta Garage"
+  description="Nokta Garage oto ekspertiz paketlerini inceleyin ve iki paketin kapsamını kolayca karşılaştırın."
+>
+  <section class="packages-hero" aria-labelledby="packages-title">
+    <div class="packages-hero__inner">
+      <p class="eyebrow">Ekspertiz Paketleri</p>
+      <h1 id="packages-title">Paketini seç, kapsamı karşılaştır.</h1>
+      <p>Aracın için gereken kontrol kapsamını incele; iki paketi hizmet hizmet karşılaştır.</p>
+      <div class="packages-hero__actions">
+        <ButtonLink href="#paketler">Paketleri İncele</ButtonLink>
+        <ButtonLink href="#karsilastir" variant="outline"><Scale size={18} /> Karşılaştır</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="packages-list-section" id="paketler" aria-labelledby="package-list-title">
+    <div class="packages-section-heading">
+      <div>
+        <h2 id="package-list-title">Kontrol kapsamlarını incele</h2>
+      </div>
+    </div>
+
+    <div class="package-list">
+      {packageData.map((item, index) => (
+        <PackageAccordion {...item} open={index === 0} />
+      ))}
+    </div>
+  </section>
+
+  <section class="package-compare" id="karsilastir" aria-labelledby="compare-title">
+    <div class="package-compare__intro">
+      <p>İki Paketli Karşılaştırma</p>
+      <h2 id="compare-title">Farkları tek ekranda gör</h2>
+      <span>İki farklı paket seç; hizmetlerin dahil olup olmadığını aşağıda karşılaştır.</span>
+    </div>
+
+    <div class="package-compare__panel" data-package-compare>
+      <div class="package-selectors">
+        <label>
+          <span>Paket A</span>
+          <select name="package-a" data-package-a data-track-event="package_compare" data-track-trigger="change" data-track-context="package_a">
+            {packageData.map((item) => <option value={item.name} selected={item.name === defaultA.name}>{item.name} · {item.price}</option>)}
+          </select>
+        </label>
+        <span class="package-selectors__versus" aria-hidden="true">VS</span>
+        <label>
+          <span>Paket B</span>
+          <select name="package-b" data-package-b data-track-event="package_compare" data-track-trigger="change" data-track-context="package_b">
+            {packageData.map((item) => <option value={item.name} selected={item.name === defaultB.name}>{item.name} · {item.price}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div class="comparison-list" aria-live="polite">
+        <div class="comparison-list__header" aria-hidden="true">
+          <span>Kontrol</span>
+          <strong data-package-a-name>{defaultA.name}</strong>
+          <strong data-package-b-name>{defaultB.name}</strong>
+        </div>
+        {serviceNames.map((service) => {
+          const includedA = defaultA.services.includes(service);
+          const includedB = defaultB.services.includes(service);
+          return (
+            <div class="comparison-row" data-service={service}>
+              <strong>{service}</strong>
+              <span class="compare-status" data-compare-a data-included={String(includedA)} aria-label={`${defaultA.name}: ${includedA ? "Dahil" : "Dahil değil"}`}>
+                <Check class="compare-status__check" size={17} aria-hidden="true" />
+                <Minus class="compare-status__minus" size={17} aria-hidden="true" />
+                <b>{includedA ? "Dahil" : "—"}</b>
+              </span>
+              <span class="compare-status" data-compare-b data-included={String(includedB)} aria-label={`${defaultB.name}: ${includedB ? "Dahil" : "Dahil değil"}`}>
+                <Check class="compare-status__check" size={17} aria-hidden="true" />
+                <Minus class="compare-status__minus" size={17} aria-hidden="true" />
+                <b>{includedB ? "Dahil" : "—"}</b>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ packageData }}>
+    const comparison = document.querySelector("[data-package-compare]");
+    const selectA = comparison?.querySelector("[data-package-a]");
+    const selectB = comparison?.querySelector("[data-package-b]");
+    const nameA = comparison?.querySelector("[data-package-a-name]");
+    const nameB = comparison?.querySelector("[data-package-b-name]");
+
+    const getPackage = (name) => packageData.find((item) => item.name === name);
+
+    const updateOptionStates = () => {
+      if (!selectA || !selectB) return;
+      Array.from(selectA.options).forEach((option) => {
+        option.disabled = option.value === selectB.value;
+      });
+      Array.from(selectB.options).forEach((option) => {
+        option.disabled = option.value === selectA.value;
+      });
+    };
+
+    const updateCardStates = () => {
+      document.querySelectorAll("[data-package-card]").forEach((card) => {
+        const packageName = card.dataset.packageCard;
+        const selectedAs = packageName === selectA?.value ? "A" : packageName === selectB?.value ? "B" : "";
+        card.dataset.selected = selectedAs;
+        const marker = card.querySelector(".package-card__selection");
+        if (marker) marker.textContent = selectedAs ? `Paket ${selectedAs}` : "";
+      });
+    };
+
+    const updateComparison = () => {
+      if (!selectA || !selectB) return;
+      const packageA = getPackage(selectA.value);
+      const packageB = getPackage(selectB.value);
+      if (!packageA || !packageB) return;
+
+      if (nameA) nameA.textContent = packageA.name;
+      if (nameB) nameB.textContent = packageB.name;
+
+      comparison.querySelectorAll("[data-service]").forEach((row) => {
+        const service = row.dataset.service;
+        const states = [
+          [row.querySelector("[data-compare-a]"), packageA],
+          [row.querySelector("[data-compare-b]"), packageB],
+        ];
+
+        states.forEach(([element, selectedPackage]) => {
+          if (!element || !service) return;
+          const included = selectedPackage.services.includes(service);
+          element.dataset.included = String(included);
+          element.setAttribute("aria-label", `${selectedPackage.name}: ${included ? "Dahil" : "Dahil değil"}`);
+          const label = element.querySelector("b");
+          if (label) label.textContent = included ? "Dahil" : "—";
+        });
+      });
+
+      updateOptionStates();
+      updateCardStates();
+    };
+
+    selectA?.addEventListener("change", updateComparison);
+    selectB?.addEventListener("change", updateComparison);
+    updateComparison();
+  </script>
+</SiteLayout>
