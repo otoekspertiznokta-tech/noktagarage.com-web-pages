@@ -3,6 +3,9 @@
 # dependencies
 /node_modules
 /.npm-cache/
+
+# Internal project notes are kept locally and are not part of customer source delivery.
+/docs/
 /.pnp
 .pnp.*
 .yarn/*
