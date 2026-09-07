@@ -3,10 +3,10 @@ services:
     image: mariadb:11.4
     restart: unless-stopped
     environment:
-      MARIADB_DATABASE: ${WORDPRESS_DB_NAME}
-      MARIADB_USER: ${WORDPRESS_DB_USER}
-      MARIADB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${WORDPRESS_DB_NAME:-nokta_garage_wp}
+      MARIADB_USER: ${WORDPRESS_DB_USER:-nokta_garage_wp}
+      MARIADB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?}
     volumes:
       - database_data:/var/lib/mysql
     healthcheck:
@@ -23,9 +23,9 @@ services:
         condition: service_healthy
     environment:
       WORDPRESS_DB_HOST: database:3306
-      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
-      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
-      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME:-nokta_garage_wp}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER:-nokta_garage_wp}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?}
       WORDPRESS_CONFIG_EXTRA: |
         if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && strpos($$_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) { $$_SERVER['HTTPS'] = 'on'; }
         define('DISALLOW_FILE_EDIT', true);
@@ -47,9 +47,9 @@ services:
     user: "33:33"
     environment:
       WORDPRESS_DB_HOST: database:3306
-      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
-      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
-      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME:-nokta_garage_wp}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER:-nokta_garage_wp}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?}
     volumes:
       - wordpress_data:/var/www/html
       - ./plugins/nokta-garage-content:/var/www/html/wp-content/plugins/nokta-garage-content:ro
