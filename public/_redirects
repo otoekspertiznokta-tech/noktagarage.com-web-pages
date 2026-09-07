@@ -1,0 +1,2 @@
+/rapor-dogrulama https://panel.noktagarage.com/rapor-dogrulama 302
+/rapor-dogrulama/* https://panel.noktagarage.com/rapor-dogrulama/:splat 302
