@@ -9,6 +9,35 @@ const isRequired = process.env.CMS_REQUIRED === "true";
 const projectRoot = process.cwd();
 const outputDirectory = path.join(projectRoot, ".cms");
 const mediaDirectory = path.join(projectRoot, "public", "cms-media");
+const transientHttpStatuses = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const fetchWithRetry = async (url, options, operation) => {
+  const maximumAttempts = 4;
+  let lastError;
+
+  for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20_000);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      if (response.ok || !transientHttpStatuses.has(response.status)) return response;
+      lastError = new Error(`${operation} başarısız: HTTP ${response.status}`);
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (attempt < maximumAttempts) {
+      console.warn(`${operation} geçici olarak başarısız; yeniden deneniyor (${attempt}/${maximumAttempts}).`);
+      await wait(500 * (2 ** (attempt - 1)));
+    }
+  }
+
+  throw lastError ?? new Error(`${operation} başarısız.`);
+};
 
 if (!cmsApiUrl) {
   if (isRequired) throw new Error("CMS_REQUIRED=true fakat CMS_API_URL tanımlı değil.");
@@ -16,17 +45,9 @@ if (!cmsApiUrl) {
   process.exit(0);
 }
 
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 20_000);
-let response;
-try {
-  response = await fetch(cmsApiUrl, {
-    headers: { Accept: "application/json", "User-Agent": "NoktaGarage-Cloudflare-Build/1.0" },
-    signal: controller.signal,
-  });
-} finally {
-  clearTimeout(timeout);
-}
+const response = await fetchWithRetry(cmsApiUrl, {
+  headers: { Accept: "application/json", "User-Agent": "NoktaGarage-Cloudflare-Build/1.0" },
+}, "WordPress içerik isteği");
 
 if (!response.ok) throw new Error(`WordPress içerik isteği başarısız: HTTP ${response.status}`);
 const bundle = await response.json();
@@ -61,7 +82,9 @@ const isCmsMediaUrl = (value) => {
 
 const downloadMedia = async (url) => {
   if (mediaCache.has(url)) return mediaCache.get(url);
-  const mediaResponse = await fetch(url, { headers: { "User-Agent": "NoktaGarage-Cloudflare-Build/1.0" } });
+  const mediaResponse = await fetchWithRetry(url, {
+    headers: { "User-Agent": "NoktaGarage-Cloudflare-Build/1.0" },
+  }, "CMS görseli isteği");
   if (!mediaResponse.ok) throw new Error(`CMS görseli indirilemedi: HTTP ${mediaResponse.status}`);
 
   const bytes = Buffer.from(await mediaResponse.arrayBuffer());

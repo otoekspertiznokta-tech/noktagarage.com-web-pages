@@ -9,6 +9,7 @@ import sharp from "sharp";
 
 const execFileAsync = promisify(execFile);
 const root = process.cwd();
+let contentRequestCount = 0;
 const pixel = await sharp({
   create: { width: 2, height: 2, channels: 4, background: { r: 180, g: 20, b: 35, alpha: 1 } },
 }).png().toBuffer();
@@ -20,6 +21,12 @@ const server = http.createServer((request, response) => {
     return;
   }
   if (request.url === "/wp-json/nokta-garage/v1/content") {
+    contentRequestCount += 1;
+    if (contentRequestCount === 1) {
+      response.writeHead(502, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ error: "temporary" }));
+      return;
+    }
     const origin = `http://127.0.0.1:${server.address().port}`;
     response.writeHead(200, { "Content-Type": "application/json" });
     response.end(JSON.stringify({
@@ -52,6 +59,7 @@ try {
   assert.equal(metadata.format, "webp");
   assert.equal(metadata.width, 2);
   assert.equal(metadata.height, 2);
+  assert.equal(contentRequestCount, 2);
   const sources = JSON.parse(await readFile(path.join(root, ".cms", "media.json"), "utf8"));
   assert.equal(sources[localized], `${localized} 2w`);
   console.log("CMS sync testi geçti: REST içerik alındı ve görsel statik WebP'ye dönüştürüldü.");
