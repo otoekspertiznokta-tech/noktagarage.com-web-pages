@@ -19,6 +19,7 @@ final class Nokta_Garage_Seeder
             self::seed_blog();
             update_option('ng_content_seeded_v1', gmdate('c'), false);
         }
+        Nokta_Garage_Content::maybe_migrate();
     }
 
     public static function default_settings(): array

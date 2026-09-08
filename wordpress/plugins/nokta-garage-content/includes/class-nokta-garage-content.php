@@ -6,13 +6,15 @@ if (!defined('ABSPATH')) {
 
 final class Nokta_Garage_Content
 {
+    private const DATA_VERSION = 2;
+
     private const POST_TYPES = [
         'ng_package' => ['Paketler', 'Paket', 'dashicons-clipboard'],
         'ng_service' => ['Hizmetler', 'Hizmet', 'dashicons-admin-tools'],
         'ng_campaign' => ['Kampanyalar', 'Kampanya', 'dashicons-megaphone'],
         'ng_gallery' => ['Galeri', 'Galeri Görseli', 'dashicons-format-gallery'],
-        'ng_branch' => ['Şubeler', 'Şube', 'dashicons-location-alt'],
-        'ng_page' => ['Site Sayfaları', 'Site Sayfası', 'dashicons-admin-page'],
+        'ng_branch' => ['İşletme Bilgileri', 'İşletme Bilgisi', 'dashicons-location-alt'],
+        'ng_home' => ['Ana Sayfa', 'Ana Sayfa', 'dashicons-admin-home'],
     ];
 
     private const ICONS = [
@@ -26,9 +28,12 @@ final class Nokta_Garage_Content
     public static function boot(): void
     {
         add_action('init', [self::class, 'register_content_types']);
+        add_action('init', [self::class, 'maybe_migrate'], 20);
         add_action('add_meta_boxes', [self::class, 'register_meta_boxes']);
         add_action('save_post', [self::class, 'save_fields'], 10, 2);
         add_action('save_post', [self::class, 'schedule_deploy_for_post'], 99, 2);
+        add_action('transition_post_status', [self::class, 'schedule_deploy_for_status'], 10, 3);
+        add_action('before_delete_post', [self::class, 'schedule_deploy_for_delete'], 10, 2);
         add_action('admin_enqueue_scripts', [self::class, 'enqueue_admin_assets']);
         add_action('admin_menu', [self::class, 'register_settings_page']);
         add_action('admin_init', [self::class, 'register_settings']);
@@ -43,6 +48,13 @@ final class Nokta_Garage_Content
     public static function register_content_types(): void
     {
         foreach (self::POST_TYPES as $type => [$plural, $single, $icon]) {
+            $supports = match ($type) {
+                'ng_service' => ['title', 'editor'],
+                'ng_campaign' => ['title', 'editor', 'thumbnail'],
+                'ng_gallery', 'ng_home' => ['title', 'thumbnail'],
+                default => ['title'],
+            };
+            $singleton = in_array($type, ['ng_branch', 'ng_home'], true);
             register_post_type($type, [
                 'labels' => [
                     'name' => $plural,
@@ -56,10 +68,69 @@ final class Nokta_Garage_Content
                 'show_in_menu' => true,
                 'show_in_rest' => false,
                 'menu_icon' => $icon,
-                'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'page-attributes'],
+                'supports' => $supports,
+                'map_meta_cap' => true,
+                'capabilities' => $singleton ? ['create_posts' => 'do_not_allow'] : [],
             ]);
         }
+        register_post_type('ng_page', [
+            'public' => false,
+            'show_ui' => false,
+            'show_in_rest' => false,
+            'supports' => ['title', 'editor', 'excerpt', 'thumbnail'],
+        ]);
         add_post_type_support('post', 'thumbnail');
+    }
+
+    public static function maybe_migrate(): void
+    {
+        if ((int) get_option('ng_content_data_version', 1) >= self::DATA_VERSION) return;
+
+        $services = get_posts(['post_type' => 'ng_service', 'post_status' => 'any', 'numberposts' => -1]);
+        $service_ids_by_name = [];
+        foreach ($services as $service) {
+            $service_ids_by_name[sanitize_title($service->post_title)] = $service->ID;
+        }
+
+        $packages = get_posts(['post_type' => 'ng_package', 'post_status' => 'any', 'numberposts' => -1]);
+        foreach ($packages as $package) {
+            if (metadata_exists('post', $package->ID, '_ng_service_ids')) continue;
+            $legacy_names = preg_split('/\R/', (string) get_post_meta($package->ID, '_ng_services', true));
+            $ids = [];
+            foreach ($legacy_names ?: [] as $name) {
+                $key = sanitize_title(trim($name));
+                if ($key !== '' && isset($service_ids_by_name[$key])) $ids[] = $service_ids_by_name[$key];
+            }
+            update_post_meta($package->ID, '_ng_service_ids', array_values(array_unique($ids)));
+        }
+
+        foreach (['ng_package', 'ng_service', 'ng_campaign', 'ng_gallery', 'ng_branch'] as $type) {
+            $records = get_posts(['post_type' => $type, 'post_status' => 'publish', 'numberposts' => -1]);
+            foreach ($records as $record) {
+                if ((string) get_post_meta($record->ID, '_ng_active', true) === '0') {
+                    wp_update_post(['ID' => $record->ID, 'post_status' => 'draft']);
+                }
+            }
+        }
+
+        $home_records = get_posts(['post_type' => 'ng_home', 'post_status' => 'any', 'numberposts' => 1]);
+        if (!$home_records) {
+            $legacy_home = get_posts(['post_type' => 'ng_page', 'name' => 'home', 'post_status' => 'any', 'numberposts' => 1]);
+            $home_id = wp_insert_post([
+                'post_type' => 'ng_home', 'post_status' => 'publish', 'post_title' => 'Ana Sayfa', 'post_name' => 'home',
+            ]);
+            if (!is_wp_error($home_id) && $legacy_home) {
+                update_post_meta($home_id, '_ng_image_id', get_post_meta($legacy_home[0]->ID, '_ng_image_id', true));
+            }
+        }
+
+        $branches = get_posts(['post_type' => 'ng_branch', 'post_status' => 'any', 'numberposts' => 1]);
+        if ($branches && !metadata_exists('post', $branches[0]->ID, '_ng_default_whatsapp_message')) {
+            $settings = wp_parse_args(get_option('ng_site_settings', []), Nokta_Garage_Seeder::default_settings());
+            update_post_meta($branches[0]->ID, '_ng_default_whatsapp_message', $settings['defaultWhatsappMessage']);
+        }
+
+        update_option('ng_content_data_version', self::DATA_VERSION, false);
     }
 
     public static function register_meta_boxes(): void
@@ -72,65 +143,43 @@ final class Nokta_Garage_Content
 
     private static function definitions(string $type): array
     {
-        $seo = [
-            ['seo_title', 'SEO başlığı', 'text'],
-            ['seo_description', 'SEO açıklaması', 'textarea'],
-        ];
-        $common = [
-            ['active', 'Sitede aktif', 'checkbox'],
-            ['order', 'Sıra', 'number'],
-            ['image_id', 'Görsel', 'media'],
-        ];
-
         return match ($type) {
-            'ng_package' => array_merge($common, [
-                ['summary', 'Kısa açıklama', 'textarea'],
+            'ng_package' => [
+                ['order', 'Sıra', 'number'],
                 ['price', 'Fiyat (örn. 2.500 TL)', 'text'],
-                ['previous_price', 'Önceki fiyat', 'text'],
-                ['services', 'Paket kapsamı (her satıra bir hizmet)', 'textarea'],
-                ['featured', 'Öne çıkan paket', 'checkbox'],
-                ['cta_label', 'Buton yazısı', 'text'],
-                ['cta_href', 'Buton adresi', 'url'],
-                ['whatsapp_message', 'WhatsApp hazır mesajı', 'textarea'],
-            ], $seo),
-            'ng_service' => array_merge($common, [
+                ['service_ids', 'Pakete dahil hizmetler', 'services'],
+            ],
+            'ng_service' => [
+                ['order', 'Sıra', 'number'],
                 ['category', 'Kategori', 'text'],
-                ['summary', 'Kısa açıklama', 'textarea'],
                 ['icon', 'İkon anahtarı', 'select', self::ICONS],
-            ], $seo),
-            'ng_campaign' => array_merge($common, [
+            ],
+            'ng_campaign' => [
+                ['order', 'Sıra', 'number'],
+                ['image_id', 'Görsel', 'media'],
                 ['summary', 'Kısa açıklama', 'textarea'],
                 ['starts_at', 'Başlangıç tarihi', 'date'],
                 ['ends_at', 'Bitiş tarihi', 'date'],
-                ['cta_label', 'Buton yazısı', 'text'],
-                ['cta_href', 'Buton adresi', 'url'],
+                ['cta_label', 'Detay sayfası aksiyon yazısı', 'text'],
+                ['cta_href', 'Detay sayfası aksiyon adresi', 'url'],
                 ['whatsapp_message', 'WhatsApp hazır mesajı', 'textarea'],
-            ]),
+            ],
             'ng_gallery' => [
-                ['active', 'Sitede aktif', 'checkbox'],
                 ['order', 'Sıra', 'number'],
                 ['image_id', 'Görsel', 'media'],
                 ['image_alt', 'Alternatif metin', 'text'],
                 ['caption', 'Açıklama', 'text'],
-                ['icon', 'Görsel yoksa ikon', 'select', ['building', 'car', 'gauge', 'scan']],
             ],
-            'ng_branch' => array_merge([['active', 'Aktif şube', 'checkbox']], [
+            'ng_branch' => [
                 ['city', 'İl', 'text'], ['district', 'İlçe', 'text'],
                 ['address', 'Açık adres', 'textarea'], ['short_address', 'Kısa adres', 'text'],
-                ['phone', 'Telefon görünümü', 'text'], ['phone_href', 'Telefon bağlantısı', 'text'],
+                ['phone', 'Telefon', 'text'],
                 ['whatsapp', 'WhatsApp bağlantısı', 'url'], ['email', 'E-posta', 'email'],
-                ['maps_url', 'Google Maps bağlantısı', 'url'], ['map_embed_url', 'Harita embed adresi', 'url'],
+                ['maps_url', 'Google Maps bağlantısı', 'url'],
                 ['working_hours', 'Çalışma saatleri', 'text'],
-            ], $seo),
-            'ng_page' => array_merge([
-                ['hero_eyebrow', 'Hero üst başlık', 'text'], ['hero_heading', 'Hero başlığı', 'text'],
-                ['hero_description', 'Hero açıklaması', 'textarea'], ['image_id', 'Hero görseli', 'media'],
-                ['primary_cta_label', 'Birincil buton yazısı', 'text'], ['primary_cta_href', 'Birincil buton adresi', 'text'],
-                ['secondary_cta_label', 'İkincil buton yazısı', 'text'], ['secondary_cta_href', 'İkincil buton adresi', 'text'],
-                ['sections_json', 'Bölüm ayarları (JSON)', 'json'],
-                ['quick_access_json', 'Hızlı erişim kartları (JSON)', 'json'],
-                ['visibility_json', 'Görünürlük ayarları (JSON)', 'json'],
-            ], $seo),
+                ['default_whatsapp_message', 'Genel WhatsApp hazır mesajı', 'textarea'],
+            ],
+            'ng_home' => [['image_id', 'Ana sayfa hero görseli', 'media']],
             'post' => [
                 ['blog_category', 'Site blog kategorisi', 'select', [
                     'Araç Alım Rehberi', 'Ekspertiz Bilgileri', 'Bakım ve Teknik Bilgiler', "Nokta Garage'dan",
@@ -152,35 +201,44 @@ final class Nokta_Garage_Content
             $options = $definition[3] ?? [];
             $value = get_post_meta($post->ID, '_ng_' . $key, true);
             echo '<tr><th scope="row"><label for="ng_' . esc_attr($key) . '">' . esc_html($label) . '</label></th><td>';
-            self::render_control($key, $type, (string) $value, $options ?? []);
+            self::render_control($key, $type, $value, $options ?? []);
             echo '</td></tr>';
         }
         echo '</tbody></table>';
     }
 
-    private static function render_control(string $key, string $type, string $value, array $options): void
+    private static function render_control(string $key, string $type, mixed $value, array $options): void
     {
         $name = 'ng_' . $key;
-        if ($type === 'checkbox') {
-            echo '<input type="checkbox" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '" value="1" ' . checked($value, '1', false) . '>';
+        if ($type === 'services') {
+            $selected = is_array($value) ? array_map('absint', $value) : [];
+            $services = get_posts([
+                'post_type' => 'ng_service', 'post_status' => ['publish', 'draft'], 'numberposts' => -1,
+                'orderby' => ['meta_value_num' => 'ASC', 'title' => 'ASC'], 'meta_key' => '_ng_order',
+            ]);
+            echo '<fieldset class="ng-service-picker">';
+            foreach ($services as $service) {
+                echo '<label style="display:block;margin:.45rem 0"><input type="checkbox" name="' . esc_attr($name) . '[]" value="' . esc_attr((string) $service->ID) . '" ' . checked(in_array($service->ID, $selected, true), true, false) . '> ' . esc_html($service->post_title) . ($service->post_status !== 'publish' ? ' — Taslak' : '') . '</label>';
+            }
+            echo '</fieldset>';
             return;
         }
         if ($type === 'textarea' || $type === 'json') {
-            echo '<textarea class="large-text' . ($type === 'json' ? ' code' : '') . '" rows="' . ($type === 'json' ? '8' : '4') . '" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '">' . esc_textarea($value) . '</textarea>';
+            echo '<textarea class="large-text' . ($type === 'json' ? ' code' : '') . '" rows="' . ($type === 'json' ? '8' : '4') . '" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '">' . esc_textarea((string) $value) . '</textarea>';
             return;
         }
         if ($type === 'select') {
             echo '<select id="' . esc_attr($name) . '" name="' . esc_attr($name) . '">';
-            foreach ($options as $option) echo '<option value="' . esc_attr($option) . '" ' . selected($value, $option, false) . '>' . esc_html($option) . '</option>';
+            foreach ($options as $option) echo '<option value="' . esc_attr($option) . '" ' . selected((string) $value, $option, false) . '>' . esc_html($option) . '</option>';
             echo '</select>';
             return;
         }
         if ($type === 'media') {
             $preview = $value ? wp_get_attachment_image((int) $value, 'thumbnail') : '';
-            echo '<div class="ng-media-field"><input type="hidden" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '"><div class="ng-media-preview">' . wp_kses_post($preview) . '</div><button type="button" class="button ng-select-media">Görsel seç</button> <button type="button" class="button-link-delete ng-remove-media">Kaldır</button></div>';
+            echo '<div class="ng-media-field"><input type="hidden" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) $value) . '"><div class="ng-media-preview">' . wp_kses_post($preview) . '</div><button type="button" class="button ng-select-media">Görsel seç</button> <button type="button" class="button-link-delete ng-remove-media">Kaldır</button></div>';
             return;
         }
-        echo '<input class="regular-text" type="' . esc_attr($type) . '" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '">';
+        echo '<input class="regular-text" type="' . esc_attr($type) . '" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) $value) . '">';
     }
 
     public static function save_fields(int $post_id, WP_Post $post): void
@@ -191,8 +249,11 @@ final class Nokta_Garage_Content
 
         foreach (self::definitions($post->post_type) as [$key, , $type]) {
             $field = 'ng_' . $key;
-            if ($type === 'checkbox') {
-                update_post_meta($post_id, '_ng_' . $key, isset($_POST[$field]) ? '1' : '0');
+            if ($type === 'services') {
+                $ids = isset($_POST[$field]) && is_array($_POST[$field])
+                    ? array_values(array_unique(array_filter(array_map('absint', wp_unslash($_POST[$field])))))
+                    : [];
+                update_post_meta($post_id, '_ng_' . $key, $ids);
                 continue;
             }
             if (!isset($_POST[$field])) continue;
@@ -235,12 +296,9 @@ final class Nokta_Garage_Content
 
     public static function sanitize_settings(array $input): array
     {
-        $url_keys = ['logo', 'alternateLogo', 'favicon', 'whatsappBaseUrl', 'mapsUrl', 'googleBusinessUrl', 'defaultSocialImage', 'deployHookUrl'];
-        $textarea_keys = ['defaultWhatsappMessage', 'footerText', 'defaultSeoDescription'];
-        $result = [];
-        foreach ($input as $key => $value) {
-            $result[$key] = in_array($key, $url_keys, true) ? esc_url_raw($value) : (in_array($key, $textarea_keys, true) ? sanitize_textarea_field($value) : sanitize_text_field($value));
-        }
+        $result = get_option('ng_site_settings', []);
+        $result = is_array($result) ? $result : [];
+        $result['deployHookUrl'] = isset($input['deployHookUrl']) ? esc_url_raw($input['deployHookUrl']) : '';
         return $result;
     }
 
@@ -248,23 +306,10 @@ final class Nokta_Garage_Content
     {
         if (!current_user_can('manage_options')) return;
         $settings = wp_parse_args(get_option('ng_site_settings', []), Nokta_Garage_Seeder::default_settings());
-        $fields = [
-            'brandName' => 'Marka adı', 'brandDescriptor' => 'Marka açıklaması', 'logo' => 'Logo URL',
-            'alternateLogo' => 'Alternatif logo URL', 'favicon' => 'Favicon URL', 'primaryPhone' => 'Telefon görünümü',
-            'phoneHref' => 'Telefon bağlantısı', 'whatsappBaseUrl' => 'WhatsApp bağlantısı', 'email' => 'E-posta',
-            'defaultWhatsappMessage' => 'Varsayılan WhatsApp mesajı', 'footerText' => 'Footer metni',
-            'copyright' => 'Telif metni', 'mapsUrl' => 'Harita bağlantısı', 'googleBusinessUrl' => 'Google Business bağlantısı',
-            'workingHours' => 'Çalışma saatleri', 'defaultSeoTitle' => 'Varsayılan SEO başlığı',
-            'defaultSeoDescription' => 'Varsayılan SEO açıklaması', 'defaultSocialImage' => 'Varsayılan sosyal görsel URL',
-            'deployHookUrl' => 'Cloudflare Pages Deploy Hook (gizli)',
-        ];
-        echo '<div class="wrap"><h1>Nokta Garage Site Ayarları</h1><p>Kaydedilen değişiklik canlı site build’ini otomatik tetikler. Yayına geçiş genellikle 1–3 dakika sürer.</p><form method="post" action="options.php">';
+        echo '<div class="wrap"><h1>Nokta Garage Yayın Ayarları</h1><p>İşletme bilgileri, ilgili menüdeki tek kayıttan yönetilir. Buradaki gizli adres yalnız Cloudflare Pages yayınını tetiklemek için kullanılır.</p><form method="post" action="options.php">';
         settings_fields('ng_site_settings_group');
         echo '<table class="form-table"><tbody>';
-        foreach ($fields as $key => $label) {
-            $type = $key === 'deployHookUrl' ? 'password' : 'text';
-            echo '<tr><th><label for="ng_setting_' . esc_attr($key) . '">' . esc_html($label) . '</label></th><td><input class="large-text" type="' . $type . '" autocomplete="off" id="ng_setting_' . esc_attr($key) . '" name="ng_site_settings[' . esc_attr($key) . ']" value="' . esc_attr($settings[$key] ?? '') . '"></td></tr>';
-        }
+        echo '<tr><th><label for="ng_setting_deployHookUrl">Cloudflare Pages Deploy Hook (gizli)</label></th><td><input class="large-text" type="password" autocomplete="off" id="ng_setting_deployHookUrl" name="ng_site_settings[deployHookUrl]" value="' . esc_attr($settings['deployHookUrl'] ?? '') . '"></td></tr>';
         echo '</tbody></table>';
         submit_button('Ayarları Kaydet ve Siteyi Güncelle');
         echo '</form></div>';
@@ -275,6 +320,11 @@ final class Nokta_Garage_Content
         register_rest_route('nokta-garage/v1', '/content', [
             'methods' => WP_REST_Server::READABLE,
             'callback' => [self::class, 'get_content_bundle'],
+            'permission_callback' => '__return_true',
+        ]);
+        register_rest_route('nokta-garage/v2', '/content', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [self::class, 'get_content_bundle_v2'],
             'permission_callback' => '__return_true',
         ]);
     }
@@ -298,6 +348,118 @@ final class Nokta_Garage_Content
         $response->header('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
         $response->header('X-Robots-Tag', 'noindex, nofollow');
         return $response;
+    }
+
+    public static function get_content_bundle_v2(): WP_REST_Response
+    {
+        $bundle = [
+            'packages' => self::records_for_type_v2('ng_package'),
+            'services' => self::records_for_type_v2('ng_service'),
+            'campaigns' => self::records_for_type_v2('ng_campaign'),
+            'gallery' => self::records_for_type_v2('ng_gallery'),
+            'blogPosts' => self::records_for_type_v2('post'),
+            'branch' => self::single_record_v2('ng_branch'),
+            'home' => self::single_record_v2('ng_home'),
+        ];
+        $response = new WP_REST_Response($bundle, 200);
+        $response->header('Cache-Control', 'no-store, max-age=0');
+        $response->header('X-Robots-Tag', 'noindex, nofollow');
+        return $response;
+    }
+
+    private static function single_record_v2(string $type): ?array
+    {
+        $records = self::records_for_type_v2($type);
+        return count($records) === 1 ? $records[0] : null;
+    }
+
+    private static function records_for_type_v2(string $type): array
+    {
+        $query = [
+            'post_type' => $type, 'post_status' => 'publish', 'numberposts' => -1,
+            'orderby' => ['meta_value_num' => 'ASC', 'date' => 'DESC'], 'meta_key' => '_ng_order',
+            'suppress_filters' => false,
+        ];
+        if (in_array($type, ['ng_branch', 'ng_home'], true)) {
+            unset($query['meta_key']);
+            $query['orderby'] = ['date' => 'DESC'];
+        }
+        if ($type === 'post') {
+            unset($query['meta_key']);
+            $query['orderby'] = ['date' => 'DESC'];
+            $query['meta_query'] = [['key' => '_ng_blog_category', 'compare' => 'EXISTS']];
+        }
+        return array_map([self::class, 'record_fields_v2'], get_posts($query));
+    }
+
+    private static function record_fields_v2(WP_Post $post): array
+    {
+        $meta = fn(string $key, string $default = ''): string => (string) (get_post_meta($post->ID, '_ng_' . $key, true) ?: $default);
+        $image = fn(): ?string => ($id = absint($meta('image_id'))) ? (wp_get_attachment_image_url($id, 'full') ?: null) : null;
+        $order = absint($meta('order'));
+
+        return match ($post->post_type) {
+            'ng_package' => [
+                'slug' => $post->post_name, 'name' => get_the_title($post), 'price' => $meta('price'),
+                'serviceSlugs' => self::service_slugs(get_post_meta($post->ID, '_ng_service_ids', true)), 'order' => $order,
+            ],
+            'ng_service' => [
+                'slug' => $post->post_name, 'name' => get_the_title($post), 'category' => $meta('category'),
+                'description' => wp_strip_all_tags($post->post_content), 'icon' => $meta('icon', 'wrench'), 'order' => $order,
+            ],
+            'ng_campaign' => [
+                'slug' => $post->post_name, 'title' => get_the_title($post), 'summary' => $meta('summary', $post->post_excerpt),
+                'contentHtml' => self::safe_content_html($post->post_content), 'image' => $image(),
+                'startsAt' => $meta('starts_at'), 'endsAt' => $meta('ends_at'), 'order' => $order,
+                'detailCta' => $meta('cta_href') ? ['label' => $meta('cta_label', 'Bilgi Al'), 'href' => $meta('cta_href')] : null,
+                'whatsappMessage' => $meta('whatsapp_message') ?: null,
+            ],
+            'ng_gallery' => [
+                'id' => $post->post_name, 'image' => $image(), 'alt' => $meta('image_alt', get_the_title($post)),
+                'caption' => $meta('caption') ?: null, 'order' => $order,
+            ],
+            'ng_branch' => [
+                'name' => get_the_title($post), 'city' => $meta('city'), 'district' => $meta('district'),
+                'address' => $meta('address'), 'shortAddress' => $meta('short_address'), 'phone' => $meta('phone'),
+                'phoneHref' => self::phone_href($meta('phone')), 'whatsapp' => $meta('whatsapp'), 'email' => $meta('email'),
+                'mapsUrl' => $meta('maps_url'), 'workingHours' => $meta('working_hours'),
+                'defaultWhatsappMessage' => $meta('default_whatsapp_message'),
+            ],
+            'ng_home' => ['heroImage' => $image()],
+            'post' => [
+                'slug' => $post->post_name, 'title' => get_the_title($post),
+                'summary' => $post->post_excerpt ?: wp_trim_words(wp_strip_all_tags($post->post_content), 32),
+                'category' => $meta('blog_category', "Nokta Garage'dan"),
+                'publishedAt' => get_the_date('Y-m-d', $post), 'displayDate' => get_the_date('j F Y', $post),
+                'coverImage' => get_the_post_thumbnail_url($post, 'full') ?: '/images/home-hero.webp',
+                'coverAlt' => $meta('cover_alt', get_the_title($post)),
+                'seoTitle' => $meta('seo_title', get_the_title($post) . ' | Nokta Garage'),
+                'seoDescription' => $meta('seo_description', $post->post_excerpt),
+                'intro' => $meta('blog_intro', $post->post_excerpt),
+                'sections' => self::blog_sections($post->post_content),
+                'contentHtml' => self::blog_content_html($post->post_content),
+            ],
+            default => [],
+        };
+    }
+
+    private static function service_slugs(mixed $ids): array
+    {
+        if (!is_array($ids)) return [];
+        $slugs = [];
+        foreach (array_map('absint', $ids) as $id) {
+            $service = get_post($id);
+            if ($service instanceof WP_Post && $service->post_type === 'ng_service') $slugs[] = $service->post_name;
+        }
+        return array_values(array_unique($slugs));
+    }
+
+    private static function phone_href(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone) ?: '';
+        if (str_starts_with($digits, '0')) $digits = '90' . substr($digits, 1);
+        if ($digits !== '' && !str_starts_with($digits, '90')) $digits = '90' . $digits;
+        return $digits === '' ? '' : 'tel:+' . $digits;
     }
 
     private static function records_for_type(string $type): array
@@ -417,7 +579,12 @@ final class Nokta_Garage_Content
             $attributes = preg_replace('/\s+id=("|\').*?\1/i', '', $match[1]);
             return '<h2' . $attributes . ' id="bolum-' . $index . '">';
         }, $content) ?? $content;
-        return apply_filters('the_content', $content);
+        return self::safe_content_html($content);
+    }
+
+    private static function safe_content_html(string $content): string
+    {
+        return wp_kses_post(apply_filters('the_content', $content));
     }
 
     private static function public_settings(): array
@@ -441,6 +608,20 @@ final class Nokta_Garage_Content
     public static function schedule_deploy_for_post(int $post_id, WP_Post $post): void
     {
         if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id) || $post->post_status !== 'publish') return;
+        if ($post->post_type !== 'post' && !array_key_exists($post->post_type, self::POST_TYPES)) return;
+        self::$deploy_on_shutdown = true;
+    }
+
+    public static function schedule_deploy_for_status(string $new_status, string $old_status, WP_Post $post): void
+    {
+        if ($new_status === $old_status || ($new_status !== 'publish' && $old_status !== 'publish')) return;
+        if ($post->post_type !== 'post' && !array_key_exists($post->post_type, self::POST_TYPES)) return;
+        self::$deploy_on_shutdown = true;
+    }
+
+    public static function schedule_deploy_for_delete(int $post_id, WP_Post $post): void
+    {
+        if ($post->post_status !== 'publish') return;
         if ($post->post_type !== 'post' && !array_key_exists($post->post_type, self::POST_TYPES)) return;
         self::$deploy_on_shutdown = true;
     }
