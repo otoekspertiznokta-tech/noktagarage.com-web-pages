@@ -161,7 +161,7 @@ final class Nokta_Garage_Content
                 ['starts_at', 'Başlangıç tarihi', 'date'],
                 ['ends_at', 'Bitiş tarihi', 'date'],
                 ['cta_label', 'Detay sayfası aksiyon yazısı', 'text'],
-                ['cta_href', 'Detay sayfası aksiyon adresi', 'url'],
+                ['cta_href', 'Detay sayfası aksiyon adresi', 'link'],
                 ['whatsapp_message', 'WhatsApp hazır mesajı', 'textarea'],
             ],
             'ng_gallery' => [
@@ -262,6 +262,7 @@ final class Nokta_Garage_Content
                 'textarea' => sanitize_textarea_field($raw),
                 'json' => self::sanitize_json($raw),
                 'url' => esc_url_raw($raw),
+                'link' => self::sanitize_link($raw),
                 'email' => sanitize_email($raw),
                 'number', 'media' => (string) absint($raw),
                 default => sanitize_text_field($raw),
@@ -275,6 +276,14 @@ final class Nokta_Garage_Content
         $decoded = json_decode($raw, true);
         if (!is_array($decoded)) return '{}';
         return wp_json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private static function sanitize_link(string $raw): string
+    {
+        $value = trim($raw);
+        if ($value === '') return '';
+        if (str_starts_with($value, '/') && !str_starts_with($value, '//')) return sanitize_text_field($value);
+        return esc_url_raw($value, ['https', 'tel', 'mailto']);
     }
 
     public static function enqueue_admin_assets(string $hook): void
@@ -409,7 +418,8 @@ final class Nokta_Garage_Content
             ],
             'ng_campaign' => [
                 'slug' => $post->post_name, 'title' => get_the_title($post), 'summary' => $meta('summary', $post->post_excerpt),
-                'contentHtml' => self::safe_content_html($post->post_content), 'image' => $image(),
+                'contentHtml' => self::safe_content_html($post->post_content),
+                'contentText' => wp_strip_all_tags($post->post_content), 'image' => $image(),
                 'startsAt' => $meta('starts_at'), 'endsAt' => $meta('ends_at'), 'order' => $order,
                 'detailCta' => $meta('cta_href') ? ['label' => $meta('cta_label', 'Bilgi Al'), 'href' => $meta('cta_href')] : null,
                 'whatsappMessage' => $meta('whatsapp_message') ?: null,
