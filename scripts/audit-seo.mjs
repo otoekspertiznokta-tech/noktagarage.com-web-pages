@@ -78,7 +78,7 @@ const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m
 for (const canonical of canonicals) if (!sitemapUrls.has(canonical)) errors.push(`sitemap eksik: ${canonical}`);
 for (const url of sitemapUrls) if (!canonicals.has(url)) errors.push(`sitemap fazladan URL: ${url}`);
 
-if (await stat(join(dist, "cerez-politikasi"), { throwIfNoEntry: false })) errors.push("kaldırılan çerez sayfası hâlâ build içinde");
+if (files.some((file) => relative(dist, file).startsWith("cerez-politikasi/"))) errors.push("kaldırılan çerez sayfası hâlâ build içinde");
 const combinedHtml = (await Promise.all(htmlFiles.map((file) => readFile(file, "utf8")))).join("\n");
 if (combinedHtml.includes("/cerez-politikasi")) errors.push("kaldırılan çerez sayfasına bağlantı kaldı");
 if (!combinedHtml.includes('"@type":"AutomotiveBusiness"')) errors.push("LocalBusiness structured data eksik");

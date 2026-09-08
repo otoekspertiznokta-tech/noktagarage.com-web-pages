@@ -2996,6 +2996,138 @@ a.quick-card:hover {
   text-transform: uppercase;
 }
 
+.campaign-detail {
+  color: var(--color-gray-950);
+  background: var(--color-white);
+}
+
+.campaign-detail[hidden],
+.campaign-detail-unavailable[hidden] {
+  display: none;
+}
+
+.campaign-detail__header {
+  padding: clamp(4.5rem, 8vw, 7rem) max(1.25rem, calc((100% - 64rem) / 2));
+  color: var(--color-white-pure);
+  background:
+    linear-gradient(118deg, var(--color-gray-950) 0%, var(--color-gray-800) 72%, var(--color-red-900) 100%);
+}
+
+.campaign-detail__header > nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-gray-300);
+  font-size: 0.78rem;
+}
+
+.campaign-detail__header > .eyebrow {
+  margin-top: 2.4rem;
+}
+
+.campaign-detail__date {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-gray-150);
+  font-size: 0.86rem;
+}
+
+.campaign-detail__header h1 {
+  max-width: 14ch;
+  margin: 1.2rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.4rem, 7vw, 6.6rem);
+  font-weight: 780;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-transform: uppercase;
+}
+
+.campaign-detail__header > p:last-child {
+  max-width: 46rem;
+  margin: 1.2rem 0 0;
+  color: var(--color-gray-150);
+  font-size: 1.05rem;
+}
+
+.campaign-detail__image {
+  width: min(calc(100% - 2.5rem), 74rem);
+  margin: clamp(2.5rem, 6vw, 4.5rem) auto 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--color-gray-800);
+  border-bottom: 0.3rem solid var(--color-red-700);
+}
+
+.campaign-detail__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.campaign-detail__body {
+  width: min(calc(100% - 2.5rem), 64rem);
+  margin-inline: auto;
+  padding-block: clamp(3rem, 7vw, 5.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  align-items: start;
+  gap: clamp(2.5rem, 6vw, 5rem);
+}
+
+.campaign-detail__copy p {
+  margin: 0;
+  color: var(--color-gray-650);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.campaign-detail__actions {
+  padding-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+  border-top: 0.2rem solid var(--color-red-700);
+}
+
+.campaign-detail__actions > span {
+  margin-bottom: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 760;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.campaign-detail-unavailable {
+  min-height: calc(100vh - var(--header-height));
+  padding: clamp(4.5rem, 9vw, 8rem) max(1.25rem, calc((100% - 64rem) / 2));
+  color: var(--color-white-pure);
+  background:
+    linear-gradient(120deg, var(--color-red-900) 0%, var(--color-red-700) 38%, var(--color-gray-950) 38.1%);
+}
+
+.campaign-detail-unavailable h2 {
+  max-width: 14ch;
+  margin: 1rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.campaign-detail-unavailable > p:not(.eyebrow) {
+  max-width: 34rem;
+  margin: 1.2rem 0 0;
+  color: var(--color-gray-150);
+}
+
+.campaign-detail-unavailable > .button-link {
+  margin-top: 1.5rem;
+}
+
 .blog-index {
   color: var(--color-gray-950);
   background: var(--color-white);
@@ -4975,7 +5107,8 @@ a.quick-card:hover {
   }
 
   .blog-featured,
-  .blog-article__layout {
+  .blog-article__layout,
+  .campaign-detail__body {
     grid-template-columns: 1fr;
   }
 
@@ -5204,13 +5337,32 @@ a.quick-card:hover {
     padding-block: 3.25rem 2.5rem;
   }
 
+  .campaign-detail__header {
+    padding-inline: 1rem;
+    padding-block: 3.25rem 2.5rem;
+  }
+
   .blog-article__header h1 {
+    font-size: clamp(2.9rem, 14vw, 4.5rem);
+    overflow-wrap: anywhere;
+  }
+
+  .campaign-detail__header h1 {
     font-size: clamp(2.9rem, 14vw, 4.5rem);
     overflow-wrap: anywhere;
   }
 
   .blog-article__cover {
     width: calc(100% - 2rem);
+    aspect-ratio: 4 / 3;
+  }
+
+  .campaign-detail__image,
+  .campaign-detail__body {
+    width: calc(100% - 2rem);
+  }
+
+  .campaign-detail__image {
     aspect-ratio: 4 / 3;
   }
 

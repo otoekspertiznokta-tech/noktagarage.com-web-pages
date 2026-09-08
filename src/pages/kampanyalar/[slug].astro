@@ -1,0 +1,111 @@
+---
+import { ArrowLeft, CalendarDays, MessageCircle } from "@lucide/astro";
+import ButtonLink from "../../components/ButtonLink.astro";
+import ResponsiveImage from "../../components/ResponsiveImage.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { siteContent, siteSettings, type CampaignRecord } from "../../data/cms";
+
+export function getStaticPaths() {
+  return siteContent.campaigns
+    .filter((campaign) => campaign.active)
+    .map((campaign) => ({ params: { slug: campaign.slug }, props: { campaign } }));
+}
+
+interface Props {
+  campaign: CampaignRecord;
+}
+
+const { campaign } = Astro.props;
+const campaignCtaHref = campaign.cta.href.trim();
+const whatsappMessage = campaign.whatsappMessage.trim()
+  || `${campaign.title} kampanyası hakkında bilgi almak istiyorum.`;
+const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent(whatsappMessage)}`;
+const formatDate = (value: string) => new Intl.DateTimeFormat("tr-TR", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(new Date(`${value}T12:00:00`));
+const dateRange = `${formatDate(campaign.startsAt)} — ${formatDate(campaign.endsAt)}`;
+---
+
+<SiteLayout
+  title={`${campaign.title} | Nokta Garage Kampanyalar`}
+  description={campaign.summary}
+  canonicalPath={`/kampanyalar/${campaign.slug}`}
+  ogImage={campaign.image}
+>
+  <article
+    class="campaign-detail"
+    data-campaign-detail
+    data-active={String(campaign.active)}
+    data-start={campaign.startsAt}
+    data-end={campaign.endsAt}
+    hidden
+  >
+    <header class="campaign-detail__header">
+      <nav aria-label="İçerik yolu">
+        <a href="/kampanyalar"><ArrowLeft size={16} aria-hidden="true" /> Kampanyalar</a>
+      </nav>
+      <p class="eyebrow">Nokta Garage Kampanya</p>
+      <div class="campaign-detail__date">
+        <CalendarDays size={18} aria-hidden="true" />
+        <time datetime={campaign.startsAt}>{dateRange}</time>
+      </div>
+      <h1>{campaign.title}</h1>
+      <p>{campaign.summary}</p>
+    </header>
+
+    {campaign.image && (
+      <figure class="campaign-detail__image">
+        <ResponsiveImage
+          src={campaign.image}
+          width={1600}
+          height={900}
+          alt={`${campaign.title} kampanya görseli`}
+          fetchpriority="high"
+          sizes="(max-width: 760px) 100vw, 1200px"
+        />
+      </figure>
+    )}
+
+    <div class="campaign-detail__body">
+      <div class="campaign-detail__copy">
+        <p>{campaign.detail}</p>
+      </div>
+      <aside class="campaign-detail__actions" aria-label="Kampanya iletişim seçenekleri">
+        <span>Kampanya hakkında bilgi alın</span>
+        {campaignCtaHref && (
+          <ButtonLink href={campaignCtaHref} variant="dark">{campaign.cta.label}</ButtonLink>
+        )}
+        <ButtonLink href={whatsappUrl} variant="outline">
+          <MessageCircle size={18} aria-hidden="true" /> WhatsApp
+        </ButtonLink>
+      </aside>
+    </div>
+  </article>
+
+  <section class="campaign-detail-unavailable" data-campaign-unavailable hidden aria-labelledby="campaign-unavailable-title">
+    <p class="eyebrow">Nokta Garage Kampanyalar</p>
+    <h2 id="campaign-unavailable-title">Bu kampanya şu anda aktif değil.</h2>
+    <p>Güncel fırsatları kampanyalar sayfasından inceleyebilirsiniz.</p>
+    <ButtonLink href="/kampanyalar" variant="dark">Güncel Kampanyalar</ButtonLink>
+  </section>
+</SiteLayout>
+
+<script>
+  import { isCampaignVisible } from "../../lib/campaign-visibility";
+
+  const detail = document.querySelector<HTMLElement>("[data-campaign-detail]");
+  const unavailable = document.querySelector<HTMLElement>("[data-campaign-unavailable]");
+
+  if (detail) {
+    const visible = isCampaignVisible({
+      active: detail.dataset.active === "true",
+      startsAt: detail.dataset.start ?? "",
+      endsAt: detail.dataset.end ?? "",
+    });
+
+    detail.hidden = !visible;
+    if (unavailable) unavailable.hidden = visible;
+  }
+</script>

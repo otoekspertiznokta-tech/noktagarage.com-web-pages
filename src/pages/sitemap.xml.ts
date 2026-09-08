@@ -38,7 +38,10 @@ export const GET: APIRoute = () => {
     `<lastmod>${escapeXml(post.publishedAt)}</lastmod>`,
     "</url>",
   ].join(""));
-  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...staticEntries, ...articleEntries].join("")}</urlset>`;
+  const campaignEntries = siteContent.campaigns
+    .filter((campaign) => campaign.active)
+    .map((campaign) => `<url><loc>${escapeXml(new URL(`/kampanyalar/${campaign.slug}/`, siteOrigin).toString())}</loc></url>`);
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...staticEntries, ...articleEntries, ...campaignEntries].join("")}</urlset>`;
 
   return new Response(body, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
 };

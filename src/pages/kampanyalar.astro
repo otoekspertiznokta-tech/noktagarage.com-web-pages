@@ -5,7 +5,9 @@ import ButtonLink from "../components/ButtonLink.astro";
 import { siteContent, siteSettings } from "../data/cms";
 
 const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent("Merhaba, güncel kampanyalarınız hakkında bilgi almak istiyorum.")}`;
-const campaignRecords = [...siteContent.campaigns].sort((a, b) => a.order - b.order);
+const campaignRecords = siteContent.campaigns
+  .filter((campaign) => campaign.active)
+  .sort((a, b) => a.order - b.order);
 ---
 
 <SiteLayout
@@ -35,7 +37,7 @@ const campaignRecords = [...siteContent.campaigns].sort((a, b) => a.order - b.or
           <h2>{campaign.title}</h2>
           <p>{campaign.summary}</p>
           <span>{campaign.detail}</span>
-          <ButtonLink href={campaign.cta.href} variant="dark">{campaign.cta.label}</ButtonLink>
+          <ButtonLink href={`/kampanyalar/${campaign.slug}`} variant="dark">{campaign.cta.label}</ButtonLink>
         </article>
       ))}
 

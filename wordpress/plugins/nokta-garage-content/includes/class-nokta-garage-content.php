@@ -344,7 +344,7 @@ final class Nokta_Garage_Content
                 'summary' => $meta('summary', $post->post_excerpt), 'detail' => wp_strip_all_tags($post->post_content),
                 'image' => $image() ?: null, 'startsAt' => $meta('starts_at'), 'endsAt' => $meta('ends_at'),
                 'active' => $bool('active', true), 'order' => $order,
-                'cta' => ['label' => $meta('cta_label', 'Bilgi Al'), 'href' => $meta('cta_href', '/randevu')],
+                'cta' => ['label' => $meta('cta_label', 'Bilgi Al'), 'href' => $meta('cta_href')],
                 'whatsappMessage' => $meta('whatsapp_message'),
             ],
             'ng_gallery' => [
