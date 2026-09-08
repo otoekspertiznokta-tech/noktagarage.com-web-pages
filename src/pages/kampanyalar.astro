@@ -6,8 +6,7 @@ import { siteContent, siteSettings } from "../data/cms";
 
 const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent("Merhaba, güncel kampanyalarınız hakkında bilgi almak istiyorum.")}`;
 const campaignRecords = siteContent.campaigns
-  .filter((campaign) => campaign.active)
-  .sort((a, b) => a.order - b.order);
+  .toSorted((a, b) => a.order - b.order);
 ---
 
 <SiteLayout
@@ -25,7 +24,6 @@ const campaignRecords = siteContent.campaigns
         <article
           class="campaign-card"
           data-campaign-card
-          data-active={String(campaign.active)}
           data-start={campaign.startsAt}
           data-end={campaign.endsAt}
           hidden
@@ -36,8 +34,8 @@ const campaignRecords = siteContent.campaigns
           </div>
           <h2>{campaign.title}</h2>
           <p>{campaign.summary}</p>
-          <span>{campaign.detail}</span>
-          <ButtonLink href={`/kampanyalar/${campaign.slug}`} variant="dark">{campaign.cta.label}</ButtonLink>
+          <span>{campaign.contentText}</span>
+          <ButtonLink href={`/kampanyalar/${campaign.slug}`} variant="dark">Detayları Gör</ButtonLink>
         </article>
       ))}
 
@@ -65,7 +63,6 @@ const campaignRecords = siteContent.campaigns
   campaignCards.forEach((card) => {
     const visible = isCampaignVisible(
       {
-        active: card.dataset.active === "true",
         startsAt: card.dataset.start ?? "",
         endsAt: card.dataset.end ?? "",
       },

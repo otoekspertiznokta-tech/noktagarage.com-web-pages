@@ -4,7 +4,8 @@ import path from "node:path";
 import process from "node:process";
 import sharp from "sharp";
 
-const cmsApiUrl = process.env.CMS_API_URL?.trim();
+const configuredCmsApiUrl = process.env.CMS_API_URL?.trim();
+const cmsApiUrl = configuredCmsApiUrl?.replace("/nokta-garage/v1/content", "/nokta-garage/v2/content");
 const isRequired = process.env.CMS_REQUIRED === "true";
 const projectRoot = process.cwd();
 const outputDirectory = path.join(projectRoot, ".cms");
@@ -45,7 +46,9 @@ if (!cmsApiUrl) {
   process.exit(0);
 }
 
-const response = await fetchWithRetry(cmsApiUrl, {
+const requestUrl = new URL(cmsApiUrl);
+requestUrl.searchParams.set("_build", `${Date.now()}`);
+const response = await fetchWithRetry(requestUrl, {
   headers: { Accept: "application/json", "User-Agent": "NoktaGarage-Cloudflare-Build/1.0" },
 }, "WordPress içerik isteği");
 
@@ -55,12 +58,14 @@ if (!bundle || typeof bundle !== "object" || Array.isArray(bundle)) {
   throw new Error("WordPress içerik yanıtı geçerli bir nesne değil.");
 }
 
-const requiredCollections = ["packages", "services", "campaigns", "blogPosts", "gallery", "branches", "pages"];
+const requiredCollections = ["packages", "services", "campaigns", "blogPosts", "gallery"];
 for (const key of requiredCollections) {
   if (!Array.isArray(bundle[key])) throw new Error(`CMS alanı eksik veya dizi değil: ${key}`);
 }
-if (!bundle.settings || typeof bundle.settings !== "object" || bundle.settings.status !== "publish") {
-  throw new Error("CMS site ayarları eksik veya yayınlanmamış.");
+for (const key of ["branch", "home"]) {
+  if (!bundle[key] || typeof bundle[key] !== "object" || Array.isArray(bundle[key])) {
+    throw new Error(`CMS tekil alanı eksik veya nesne değil: ${key}`);
+  }
 }
 
 await rm(mediaDirectory, { recursive: true, force: true });
@@ -73,7 +78,7 @@ const isCmsMediaUrl = (value) => {
   if (typeof value !== "string" || !/^https?:\/\//i.test(value)) return false;
   try {
     const candidate = new URL(value);
-    const cms = new URL(cmsApiUrl);
+    const cms = new URL(requestUrl);
     return candidate.origin === cms.origin && candidate.pathname.includes("/wp-content/uploads/");
   } catch {
     return false;

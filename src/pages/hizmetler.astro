@@ -15,7 +15,7 @@ const iconMap = {
   airbag: ShieldCheck,
 } satisfies Record<ServiceIconKey, typeof Wrench>;
 
-const services = siteContent.services.filter((service) => service.active).sort((a, b) => a.order - b.order);
+const services = siteContent.services.toSorted((a, b) => a.order - b.order);
 ---
 
 <SiteLayout

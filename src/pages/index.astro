@@ -21,15 +21,15 @@ import QuickAccessCard from "../components/QuickAccessCard.astro";
 import ResponsiveImage from "../components/ResponsiveImage.astro";
 import { primaryBranch, siteContent, siteSettings } from "../data/cms";
 import { localBusinessStructuredData } from "../data/structured-data";
+import { siteConfig } from "../data/site-config";
 
-const homePage = siteContent.pages.home;
+const homePage = siteConfig.home;
 const iconMap = {
   package: PackageSearch, service: Wrench, mobile: MapPinned, remote: Radio,
   report: FileSearch, appointment: CalendarClock, campaign: BadgePercent,
   gallery: Images, franchise: Store, contact: Navigation,
 } as const;
-const quickAccess = (homePage.quickAccess ?? []).filter((item) => item.visible).sort((a, b) => a.order - b.order);
-const homeSections = homePage.sections as Record<string, string>;
+const quickAccess = homePage.quickAccess;
 ---
 
 <SiteLayout
@@ -42,7 +42,7 @@ const homeSections = homePage.sections as Record<string, string>;
   <section class="home-hero" aria-labelledby="home-hero-title">
     <ResponsiveImage
       class="home-hero__image"
-      src={homePage.hero.image ?? "/images/home-hero.webp"}
+      src={siteContent.home.heroImage ?? "/images/home-hero.webp"}
       width={1600}
       height={779}
       alt="Profesyonel oto ekspertiz alanında kontrol edilen otomobil"
@@ -51,12 +51,12 @@ const homeSections = homePage.sections as Record<string, string>;
     />
     <div class="home-hero__veil" aria-hidden="true"></div>
     <div class="home-hero__content">
-      <p class="eyebrow">{homePage.hero.eyebrow}</p>
-      <h1 id="home-hero-title">{homePage.hero.heading}</h1>
-      <p>{homePage.hero.description}</p>
+      <p class="eyebrow">{homePage.eyebrow}</p>
+      <h1 id="home-hero-title">{homePage.heading}</h1>
+      <p>{homePage.description}</p>
       <div class="home-hero__actions">
-        <ButtonLink href={homePage.hero.primaryCta?.href ?? siteSettings.phoneHref} eventName="click_phone" eventContext="home_hero"><Phone size={18} /> {homePage.hero.primaryCta?.label ?? "Hemen Ara"}</ButtonLink>
-        <ButtonLink href={homePage.hero.secondaryCta?.href ?? siteSettings.whatsappBaseUrl} variant="outline" eventName="click_whatsapp" eventContext="home_hero"><MessageCircle size={18} /> {homePage.hero.secondaryCta?.label ?? "WhatsApp"}</ButtonLink>
+        <ButtonLink href={siteSettings.phoneHref} eventName="click_phone" eventContext="home_hero"><Phone size={18} /> Hemen Ara</ButtonLink>
+        <ButtonLink href={siteSettings.whatsappBaseUrl} variant="outline" eventName="click_whatsapp" eventContext="home_hero"><MessageCircle size={18} /> WhatsApp</ButtonLink>
       </div>
     </div>
   </section>
@@ -67,7 +67,7 @@ const homeSections = homePage.sections as Record<string, string>;
         <span class="location-strip__icon"><MapPinned size={28} aria-hidden="true" /></span>
         <div>
           <p class="location-strip__label">Nokta Garage · Lüleburgaz</p>
-          <h2 id="location-title">{homeSections.locationTitle}</h2>
+          <h2 id="location-title">{homePage.locationTitle}</h2>
           <address>{primaryBranch.shortAddress}</address>
           <span class="location-strip__hours"><Clock3 size={16} aria-hidden="true" /> {primaryBranch.workingHours}</span>
         </div>
@@ -85,7 +85,7 @@ const homeSections = homePage.sections as Record<string, string>;
   <section class="home-quick" id="hizli-erisim" aria-labelledby="quick-title">
     <div class="home-section-heading">
       <p>Hızlı Erişim</p>
-      <h2 id="quick-title">{homeSections.quickAccessTitle}</h2>
+      <h2 id="quick-title">{homePage.quickAccessTitle}</h2>
     </div>
 
     <div class="quick-grid" aria-label="Nokta Garage hızlı erişim bağlantıları">
@@ -99,7 +99,7 @@ const homeSections = homePage.sections as Record<string, string>;
   <section class="home-discover" aria-labelledby="discover-title">
     <div class="home-discover__heading">
       <p>Keşfet</p>
-      <h2 id="discover-title">{homeSections.discoverTitle}</h2>
+      <h2 id="discover-title">{homePage.discoverTitle}</h2>
     </div>
     <div class="home-discover__links">
       <a href="/galeri">

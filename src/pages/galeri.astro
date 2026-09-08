@@ -4,7 +4,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import { cmsMediaSources, siteContent } from "../data/cms";
 
 const galleryImages = siteContent.gallery
-  .filter((item) => item.active && item.image)
+  .filter((item) => item.image)
   .sort((a, b) => a.order - b.order);
 ---
 

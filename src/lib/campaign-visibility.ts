@@ -1,19 +1,20 @@
 export interface CampaignWindow {
-  active: boolean;
   startsAt: string;
   endsAt: string;
 }
 
 export const isCampaignVisible = (campaign: CampaignWindow, now = Date.now()) => {
-  const startsAt = Date.parse(`${campaign.startsAt}T00:00:00`);
-  const endsAt = Date.parse(`${campaign.endsAt}T23:59:59`);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(now);
+  const datePart = (type: "year" | "month" | "day") => parts.find((part) => part.type === type)?.value ?? "";
+  const today = `${datePart("year")}-${datePart("month")}-${datePart("day")}`;
 
   return (
-    campaign.active &&
-    Number.isFinite(startsAt) &&
-    Number.isFinite(endsAt) &&
-    startsAt <= endsAt &&
-    now >= startsAt &&
-    now <= endsAt
+    /^\d{4}-\d{2}-\d{2}$/.test(campaign.startsAt) &&
+    /^\d{4}-\d{2}-\d{2}$/.test(campaign.endsAt) &&
+    campaign.startsAt <= campaign.endsAt &&
+    today >= campaign.startsAt &&
+    today <= campaign.endsAt
   );
 };

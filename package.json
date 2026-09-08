@@ -15,17 +15,18 @@
     "audit:site": "node scripts/audit-static-build.mjs",
     "audit:seo": "node scripts/audit-seo.mjs",
     "audit:qa": "node scripts/audit-browser-readiness.mjs",
-    "test:cms": "node scripts/test-cms-sync.mjs",
+    "test:cms": "node scripts/test-cms-sync.mjs && node --experimental-strip-types scripts/test-cms-contract.mjs",
     "preview": "astro preview",
     "check": "astro check"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.6",
     "@fontsource/barlow-condensed": "^5.3.0",
-    "astro": "^7.2.10",
     "@lucide/astro": "^1.39.0",
+    "astro": "^7.2.10",
     "sharp": "^0.35.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@types/node": "^24.10.0"

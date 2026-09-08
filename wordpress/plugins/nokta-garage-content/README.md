@@ -9,11 +9,10 @@ Bu eklenti yalnız Nokta Garage public sitesinin headless içerik yönetimi içi
 - Kampanyalar ve yayın tarihleri
 - Blog yazıları
 - Galeri
-- Şubeler
-- Ana sayfa hero/hızlı erişim alanları
-- Genel iletişim, SEO ve WhatsApp ayarları
+- Tekil işletme bilgileri
+- Ana sayfa hero görseli
 
-Bir kayıt public sitede gösterilecekse WordPress durumu **Yayınlandı** olmalı, ilgili içerik tipindeki **Sitede aktif** kutusu da açık olmalıdır. Taslak içerikler REST çıktısına dahil edilmez.
+Bir kayıt public sitede gösterilecekse WordPress durumu **Yayınlandı** olmalıdır. Taslak içerikler REST çıktısına dahil edilmez. Kampanyalar ayrıca başlangıç ve bitiş tarihleri içinde gösterilir.
 
 ## Yayın akışı
 
@@ -22,7 +21,7 @@ Cloudflare Pages production Deploy Hook adresi **Ayarlar > Nokta Garage** ekran�
 Public build endpoint'i:
 
 ```text
-/?rest_route=/nokta-garage/v1/content
+/?rest_route=/nokta-garage/v2/content
 ```
 
-Endpoint yalnız yayınlanabilir public içeriği döndürür. WordPress kullanıcıları, taslaklar, özel ayarlar ve Cloudflare Deploy Hook URL'si yanıta eklenmez.
+V2 endpoint yalnız yayınlanabilir public içeriği döndürür. WordPress kullanıcıları, taslaklar, eski alanlar ve Cloudflare Deploy Hook URL'si yanıta eklenmez. V1 endpoint bir teslim sürümü boyunca geri dönüş amacıyla korunur.

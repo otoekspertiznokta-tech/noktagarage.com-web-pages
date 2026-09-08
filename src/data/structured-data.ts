@@ -1,6 +1,7 @@
 import { primaryBranch, siteSettings } from "./cms";
 
 const siteOrigin = "https://noktagarage.com";
+const hoursMatch = primaryBranch.workingHours.match(/(\d{2}:\d{2})\D+(\d{2}:\d{2})/);
 
 export const localBusinessStructuredData = {
   "@context": "https://schema.org",
@@ -13,13 +14,12 @@ export const localBusinessStructuredData = {
   email: primaryBranch.email,
   address: {
     "@type": "PostalAddress",
-    streetAddress: "Atatürk Mahallesi, Yeni Sanayi Sitesi, A/4 Blok, 6. Sokak, No:64",
-    postalCode: "39750",
+    streetAddress: primaryBranch.address,
     addressLocality: primaryBranch.district,
     addressRegion: primaryBranch.city,
     addressCountry: "TR",
   },
-  openingHours: "Mo-Su 08:00-18:00",
+  ...(hoursMatch ? { openingHours: `Mo-Su ${hoursMatch[1]}-${hoursMatch[2]}` } : {}),
   hasMap: primaryBranch.mapsUrl,
   contactPoint: {
     "@type": "ContactPoint",

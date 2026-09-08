@@ -7,7 +7,6 @@ import { siteContent, siteSettings, type CampaignRecord } from "../../data/cms";
 
 export function getStaticPaths() {
   return siteContent.campaigns
-    .filter((campaign) => campaign.active)
     .map((campaign) => ({ params: { slug: campaign.slug }, props: { campaign } }));
 }
 
@@ -16,8 +15,7 @@ interface Props {
 }
 
 const { campaign } = Astro.props;
-const campaignCtaHref = campaign.cta.href.trim();
-const whatsappMessage = campaign.whatsappMessage.trim()
+const whatsappMessage = campaign.whatsappMessage?.trim()
   || `${campaign.title} kampanyası hakkında bilgi almak istiyorum.`;
 const whatsappUrl = `${siteSettings.whatsappBaseUrl}?text=${encodeURIComponent(whatsappMessage)}`;
 const formatDate = (value: string) => new Intl.DateTimeFormat("tr-TR", {
@@ -32,12 +30,11 @@ const dateRange = `${formatDate(campaign.startsAt)} — ${formatDate(campaign.en
   title={`${campaign.title} | Nokta Garage Kampanyalar`}
   description={campaign.summary}
   canonicalPath={`/kampanyalar/${campaign.slug}`}
-  ogImage={campaign.image}
+  ogImage={campaign.image ?? undefined}
 >
   <article
     class="campaign-detail"
     data-campaign-detail
-    data-active={String(campaign.active)}
     data-start={campaign.startsAt}
     data-end={campaign.endsAt}
     hidden
@@ -70,12 +67,12 @@ const dateRange = `${formatDate(campaign.startsAt)} — ${formatDate(campaign.en
 
     <div class="campaign-detail__body">
       <div class="campaign-detail__copy">
-        <p>{campaign.detail}</p>
+        <div set:html={campaign.contentHtml}></div>
       </div>
       <aside class="campaign-detail__actions" aria-label="Kampanya iletişim seçenekleri">
         <span>Kampanya hakkında bilgi alın</span>
-        {campaignCtaHref && (
-          <ButtonLink href={campaignCtaHref} variant="dark">{campaign.cta.label}</ButtonLink>
+        {campaign.detailCta && (
+          <ButtonLink href={campaign.detailCta.href} variant="dark">{campaign.detailCta.label}</ButtonLink>
         )}
         <ButtonLink href={whatsappUrl} variant="outline">
           <MessageCircle size={18} aria-hidden="true" /> WhatsApp
@@ -100,7 +97,6 @@ const dateRange = `${formatDate(campaign.startsAt)} — ${formatDate(campaign.en
 
   if (detail) {
     const visible = isCampaignVisible({
-      active: detail.dataset.active === "true",
       startsAt: detail.dataset.start ?? "",
       endsAt: detail.dataset.end ?? "",
     });

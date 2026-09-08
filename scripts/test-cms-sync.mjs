@@ -20,7 +20,7 @@ const server = http.createServer((request, response) => {
     response.end(pixel);
     return;
   }
-  if (request.url === "/wp-json/nokta-garage/v1/content") {
+  if (request.url?.startsWith("/wp-json/nokta-garage/v2/content?")) {
     contentRequestCount += 1;
     if (contentRequestCount === 1) {
       response.writeHead(502, { "Content-Type": "application/json" });
@@ -30,12 +30,14 @@ const server = http.createServer((request, response) => {
     const origin = `http://127.0.0.1:${server.address().port}`;
     response.writeHead(200, { "Content-Type": "application/json" });
     response.end(JSON.stringify({
-      packages: [], services: [], campaigns: [], blogPosts: [], branches: [], pages: [],
+      packages: [{ slug: "test-paket", name: "Test Paket", price: "1 TL", serviceSlugs: ["test-hizmet"], order: 1 }],
+      services: [{ slug: "test-hizmet", name: "Test Hizmet", category: "Test", description: "Test açıklaması", icon: "car", order: 1 }],
+      campaigns: [], blogPosts: [],
       gallery: [{
-        id: 1, slug: "test", status: "publish", modified_gmt: "2026-09-06T00:00:00Z",
-        acf: { id: "test", image: `${origin}/wp-content/uploads/test.png`, alt: "Test", placeholderLabel: "Test", icon: "car", order: 1, active: true },
+        id: "test", image: `${origin}/wp-content/uploads/test.png`, alt: "Test", caption: null, order: 1,
       }],
-      settings: { id: 0, slug: "site-settings", status: "publish", modified_gmt: "2026-09-06T00:00:00Z", acf: {} },
+      branch: { name: "Test", city: "Test", district: "Test", address: "Test adres", shortAddress: "Test", phone: "+90 555 000 00 00", phoneHref: "tel:+905550000000", whatsapp: "https://wa.me/905550000000", email: "test@example.com", mapsUrl: "https://maps.google.com", workingHours: "Her gün 08:00–18:00", defaultWhatsappMessage: "Test mesajı" },
+      home: { heroImage: null },
     }));
     return;
   }
@@ -43,7 +45,7 @@ const server = http.createServer((request, response) => {
 });
 
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-const endpoint = `http://127.0.0.1:${server.address().port}/wp-json/nokta-garage/v1/content`;
+const endpoint = `http://127.0.0.1:${server.address().port}/wp-json/nokta-garage/v2/content`;
 
 try {
   await execFileAsync(process.execPath, ["scripts/sync-wordpress-content.mjs"], {
@@ -51,7 +53,7 @@ try {
     env: { ...process.env, CMS_API_URL: endpoint, CMS_REQUIRED: "true" },
   });
   const bundle = JSON.parse(await readFile(path.join(root, ".cms", "content.json"), "utf8"));
-  const localized = bundle.gallery[0].acf.image;
+  const localized = bundle.gallery[0].image;
   assert.match(localized, /^\/cms-media\/[a-f0-9]{20}\.webp$/);
   const localFile = path.join(root, "public", localized);
   assert.equal(existsSync(localFile), true);

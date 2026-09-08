@@ -5,11 +5,14 @@ import ButtonLink from "../components/ButtonLink.astro";
 import PackageAccordion from "../components/PackageAccordion.astro";
 import { siteContent } from "../data/cms";
 
-const packageData = siteContent.packages.filter((item) => item.active).sort((a, b) => a.order - b.order);
+const serviceBySlug = new Map(siteContent.services.map((service) => [service.slug, service.name]));
+const packageData = siteContent.packages
+  .toSorted((a, b) => a.order - b.order)
+  .map((item) => ({ ...item, services: item.serviceSlugs.map((slug) => serviceBySlug.get(slug)!) }));
 
 const serviceNames = [...new Set(packageData.flatMap((item) => item.services))];
 const defaultA = packageData[0];
-const defaultB = packageData[5];
+const defaultB = packageData[5] ?? packageData[1] ?? packageData[0];
 ---
 
 <SiteLayout

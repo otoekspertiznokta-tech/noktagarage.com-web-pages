@@ -1,160 +1,116 @@
-import type { BlogPost } from "../blog-posts";
+import { z } from "zod";
 
-export interface SeoFields {
-  title: string;
-  description: string;
-  image?: string;
-}
+const requiredText = (label: string) => z.string().trim().min(1, `${label} boş bırakılamaz.`);
+const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Geçersiz slug biçimi.");
+const order = z.number().int().nonnegative();
+const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarih YYYY-AA-GG biçiminde olmalı.").refine((value) => {
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
+}, "Geçersiz takvim tarihi.");
+const absoluteUrl = z.url("Geçerli bir URL girilmeli.");
+const mediaUrl = z.string().refine((value) => value.startsWith("/") || URL.canParse(value), "Geçersiz görsel adresi.");
+const linkUrl = z.string().refine(
+  (value) => /^\/(?!\/)/.test(value) || /^(https:|tel:|mailto:)/.test(value),
+  "Bağlantı / ile başlamalı veya https, tel ya da mailto adresi olmalı.",
+);
 
-export interface CtaFields {
-  label: string;
-  href: string;
-}
+export const serviceIconKeys = [
+  "wrench", "search", "car", "paint", "scan", "box", "gauge", "brake",
+  "suspension", "alignment", "interior", "light", "tire", "airbag",
+] as const;
 
-export interface PackageRecord {
-  name: string;
-  slug: string;
-  summary: string;
-  description: string;
-  price: string;
-  previousPrice?: string;
-  image?: string;
-  services: string[];
-  featured: boolean;
-  active: boolean;
-  order: number;
-  cta: CtaFields;
-  whatsappMessage: string;
-  seo: SeoFields;
-}
+const packageSchema = z.strictObject({
+  slug, name: requiredText("Paket adı"), price: requiredText("Paket fiyatı"),
+  serviceSlugs: z.array(slug).min(1, "Pakete en az bir hizmet bağlanmalı."), order,
+});
 
-export type ServiceIconKey =
-  | "wrench" | "search" | "car" | "paint" | "scan" | "box" | "gauge"
-  | "brake" | "suspension" | "alignment" | "interior" | "light" | "tire" | "airbag";
+const serviceSchema = z.strictObject({
+  slug, name: requiredText("Hizmet adı"), category: requiredText("Hizmet kategorisi"),
+  description: requiredText("Hizmet açıklaması"), icon: z.enum(serviceIconKeys), order,
+});
 
-export interface ServiceRecord {
-  name: string;
-  slug: string;
-  category: string;
-  summary: string;
-  description: string;
-  icon: ServiceIconKey;
-  image?: string;
-  active: boolean;
-  order: number;
-  seo: SeoFields;
-}
+const campaignSchema = z.strictObject({
+  slug, title: requiredText("Kampanya başlığı"), summary: requiredText("Kampanya özeti"),
+  contentHtml: requiredText("Kampanya içeriği"), contentText: requiredText("Kampanya içeriği"),
+  image: mediaUrl.nullable(), startsAt: date, endsAt: date, order,
+  detailCta: z.strictObject({ label: requiredText("Aksiyon yazısı"), href: linkUrl }).nullable(),
+  whatsappMessage: z.string().trim().nullable(),
+}).superRefine((campaign, context) => {
+  if (campaign.startsAt > campaign.endsAt) {
+    context.addIssue({ code: "custom", path: ["endsAt"], message: "Kampanya bitiş tarihi başlangıçtan önce olamaz." });
+  }
+});
 
-export interface CampaignRecord {
-  title: string;
-  slug: string;
-  summary: string;
-  detail: string;
-  image?: string;
-  startsAt: string;
-  endsAt: string;
-  active: boolean;
-  order: number;
-  cta: CtaFields;
-  whatsappMessage: string;
-}
+const gallerySchema = z.strictObject({
+  id: slug, image: mediaUrl.nullable(), alt: requiredText("Galeri alternatif metni"),
+  caption: z.string().trim().nullable(), order,
+});
 
-export type GalleryIconKey = "building" | "car" | "gauge" | "scan";
+const blogCategorySchema = z.enum([
+  "Araç Alım Rehberi", "Ekspertiz Bilgileri", "Bakım ve Teknik Bilgiler", "Nokta Garage'dan",
+]);
+const blogSectionSchema = z.strictObject({
+  heading: requiredText("Blog bölüm başlığı"), paragraphs: z.array(requiredText("Blog paragrafı")),
+  bullets: z.array(requiredText("Blog liste maddesi")).optional(),
+});
+const blogPostSchema = z.strictObject({
+  slug, title: requiredText("Blog başlığı"), summary: requiredText("Blog özeti"), category: blogCategorySchema,
+  publishedAt: date, displayDate: requiredText("Blog tarihi"), coverImage: mediaUrl,
+  coverAlt: requiredText("Blog görsel alt metni"), seoTitle: requiredText("SEO başlığı"),
+  seoDescription: requiredText("SEO açıklaması"), intro: requiredText("Blog giriş metni"),
+  sections: z.array(blogSectionSchema), contentHtml: z.string().optional(),
+});
 
-export interface GalleryRecord {
-  id: string;
-  image?: string;
-  alt: string;
-  caption?: string;
-  placeholderLabel: string;
-  icon: GalleryIconKey;
-  order: number;
-  active: boolean;
-}
+const branchSchema = z.strictObject({
+  name: requiredText("İşletme adı"), city: requiredText("İl"), district: requiredText("İlçe"),
+  address: requiredText("Adres"), shortAddress: requiredText("Kısa adres"), phone: requiredText("Telefon"),
+  phoneHref: z.string().regex(/^tel:\+?\d+$/, "Geçersiz telefon bağlantısı."),
+  whatsapp: absoluteUrl, email: z.email("Geçersiz e-posta adresi."), mapsUrl: absoluteUrl,
+  workingHours: requiredText("Çalışma saatleri"), defaultWhatsappMessage: requiredText("WhatsApp hazır mesajı"),
+});
 
-export interface BranchRecord {
-  name: string;
-  slug: string;
-  city: string;
-  district: string;
-  address: string;
-  shortAddress: string;
-  phone: string;
-  phoneHref: string;
-  whatsapp: string;
-  email: string;
-  mapsUrl: string;
-  mapEmbedUrl?: string;
-  workingHours: string;
-  images: string[];
-  description: string;
-  active: boolean;
-  seo: SeoFields;
-}
+const homeSchema = z.strictObject({ heroImage: mediaUrl.nullable() });
 
-export interface PageContentRecord {
-  slug: string;
-  title: string;
-  hero: {
-    eyebrow: string;
-    heading: string;
-    description: string;
-    image?: string;
-    primaryCta?: CtaFields;
-    secondaryCta?: CtaFields;
-  };
-  sections: Record<string, unknown>;
-  quickAccess?: Array<{
-    label: string;
-    href: string;
-    tone: "white" | "gray";
-    icon: "package" | "service" | "mobile" | "remote" | "report" | "appointment" | "campaign" | "gallery" | "franchise" | "contact";
-    visible: boolean;
-    order: number;
-  }>;
-  visibility: Record<string, boolean>;
-  seo: SeoFields;
-}
+const uniqueBy = <T>(items: T[], key: (item: T) => string, label: string, context: z.RefinementCtx) => {
+  const seen = new Set<string>();
+  items.forEach((item, index) => {
+    const value = key(item);
+    if (seen.has(value)) context.addIssue({ code: "custom", path: [index, "slug"], message: `Mükerrer ${label}: ${value}` });
+    seen.add(value);
+  });
+};
 
-export interface NavigationLink {
-  label: string;
-  href: string;
-}
+export const cmsContentSchema = z.strictObject({
+  packages: z.array(packageSchema).min(1, "En az bir paket yayınlanmalı."),
+  services: z.array(serviceSchema).min(1, "En az bir hizmet yayınlanmalı."), campaigns: z.array(campaignSchema),
+  gallery: z.array(gallerySchema), blogPosts: z.array(blogPostSchema), branch: branchSchema, home: homeSchema,
+}).superRefine((content, context) => {
+  uniqueBy(content.packages, (item) => item.slug, "paket slug'ı", context);
+  uniqueBy(content.services, (item) => item.slug, "hizmet slug'ı", context);
+  uniqueBy(content.campaigns, (item) => item.slug, "kampanya slug'ı", context);
+  uniqueBy(content.blogPosts, (item) => item.slug, "blog slug'ı", context);
+  uniqueBy(content.gallery, (item) => item.id, "galeri kimliği", context);
+  const services = new Set(content.services.map((service) => service.slug));
+  content.packages.forEach((item, packageIndex) => item.serviceSlugs.forEach((serviceSlug, serviceIndex) => {
+    if (!services.has(serviceSlug)) context.addIssue({
+      code: "custom", path: ["packages", packageIndex, "serviceSlugs", serviceIndex],
+      message: `Paketin hizmet referansı bulunamadı: ${serviceSlug}`,
+    });
+  }));
+});
 
-export interface SiteSettingsRecord {
-  brandName: string;
-  brandDescriptor: string;
-  logo: string;
-  alternateLogo?: string;
-  favicon: string;
-  primaryPhone: string;
-  phoneHref: string;
-  whatsappBaseUrl: string;
-  email: string;
-  socialLinks: NavigationLink[];
-  defaultWhatsappMessage: string;
-  footerText: string;
-  copyright: string;
-  mapsUrl: string;
-  googleBusinessUrl: string;
-  workingHours: string;
-  defaultSeo: SeoFields;
-  defaultSocialImage?: string;
-  navigation: {
-    services: NavigationLink[];
-    corporate: NavigationLink[];
-    mobile: NavigationLink[];
-    legal: NavigationLink[];
-  };
-}
+export type ServiceIconKey = (typeof serviceIconKeys)[number];
+export type PackageRecord = z.infer<typeof packageSchema>;
+export type ServiceRecord = z.infer<typeof serviceSchema>;
+export type CampaignRecord = z.infer<typeof campaignSchema>;
+export type GalleryRecord = z.infer<typeof gallerySchema>;
+export type BranchRecord = z.infer<typeof branchSchema>;
+export type SiteContentSnapshot = z.infer<typeof cmsContentSchema>;
 
-export interface SiteContentSnapshot {
-  packages: PackageRecord[];
-  services: ServiceRecord[];
-  campaigns: CampaignRecord[];
-  blogPosts: BlogPost[];
-  gallery: GalleryRecord[];
-  branches: BranchRecord[];
-  pages: Record<string, PageContentRecord>;
-  settings: SiteSettingsRecord;
-}
+export const parseCmsContent = (input: unknown): SiteContentSnapshot => {
+  const result = cmsContentSchema.safeParse(input);
+  if (result.success) return result.data;
+  const details = result.error.issues.map((issue) => `${issue.path.join(".") || "içerik"}: ${issue.message}`).join("\n");
+  throw new Error(`CMS içerik sözleşmesi geçersiz:\n${details}`);
+};
