@@ -470,6 +470,11 @@ img {
   text-transform: uppercase;
 }
 
+.home-hero__heading-last-line {
+  display: block;
+  padding-top: 0.04em;
+}
+
 .home-hero__content > p:not(.eyebrow) {
   max-width: 36rem;
   margin: 1.5rem 0 0;

@@ -30,6 +30,7 @@ const iconMap = {
   gallery: Images, franchise: Store, contact: Navigation,
 } as const;
 const quickAccess = homePage.quickAccess;
+const heroHeadingParts = homePage.heading.match(/^(.*)\s+(net gör\.?)$/i);
 ---
 
 <SiteLayout
@@ -52,7 +53,9 @@ const quickAccess = homePage.quickAccess;
     <div class="home-hero__veil" aria-hidden="true"></div>
     <div class="home-hero__content">
       <p class="eyebrow">{homePage.eyebrow}</p>
-      <h1 id="home-hero-title">{homePage.heading}</h1>
+      <h1 id="home-hero-title">
+        {heroHeadingParts ? <>{heroHeadingParts[1]}<span class="home-hero__heading-last-line">{heroHeadingParts[2]}</span></> : homePage.heading}
+      </h1>
       <p>{homePage.description}</p>
       <div class="home-hero__actions">
         <ButtonLink href={siteSettings.phoneHref} eventName="click_phone" eventContext="home_hero"><Phone size={18} /> Hemen Ara</ButtonLink>
